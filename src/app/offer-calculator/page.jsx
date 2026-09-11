@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function OfferCalculatorPage() {
-  return <OfferCalculator />;
+  return <OfferCalculator defaultFlow="DETAILED" />;
 }

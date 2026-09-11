@@ -199,7 +199,7 @@
   align-items: center;
   justify-content: flex-end;
   align-self: start;
-  margin: 8px 0 0;
+  margin: clamp(18px, 2.4vh, 26px) 0 0;
   min-height: 44px;
   padding: 0;
   border: 0;
@@ -524,7 +524,7 @@
 
 .embedded .progressStep i {
   margin: 3px 0;
-  opacity: .72;
+  opacity: 1;
 }
 
 .embedded .progressStep b {
@@ -534,7 +534,7 @@
 
 .embedded .currentStep {
   color: var(--white);
-  background: linear-gradient(135deg, var(--pink), var(--magenta), var(--orange));
+  background: transparent;
   box-shadow: none;
 }
 
@@ -543,12 +543,12 @@
 }
 
 .embedded .doneStep {
-  color: rgba(253, 251, 246, .82);
-  background: rgba(253, 251, 246, .055);
+  color: var(--white);
+  background: transparent;
 }
 
 .embedded .doneStep span {
-  color: rgba(253, 251, 246, .56);
+  color: rgba(253, 251, 246, .65);
 }
 
 /* Homepage reference layout: full image scene with glass calculator surfaces. */
@@ -579,8 +579,8 @@
 .embeddedRail {
   grid-template-rows: auto auto;
   align-content: start;
-  gap: clamp(50px, 16.5vh, 146px);
-  padding: clamp(22px, 3.4vh, 42px) clamp(24px, 3vw, 52px);
+  gap: clamp(36px, 8vh, 76px);
+  padding: clamp(20px, 3vh, 36px) clamp(20px, 2.5vw, 44px);
   border-right: 1px solid rgba(253, 251, 246, .20);
   background: linear-gradient(90deg, rgba(255, 255, 255, .006), rgba(255, 255, 255, .002));
   backdrop-filter: blur(4px);
@@ -588,8 +588,8 @@
 }
 
 .embeddedWorkspace {
-  padding: clamp(14px, 2.2vh, 24px) clamp(42px, 5vw, 92px) clamp(14px, 2.2vh, 24px) clamp(28px, 4.8vw, 78px);
-  gap: clamp(12px, 1.8vh, 18px);
+  padding: clamp(24px, 3vh, 38px) clamp(36px, 4.5vw, 76px) clamp(10px, 1.5vh, 18px) clamp(28px, 4vw, 68px);
+  gap: clamp(24px, 3.2vh, 38px);
 }
 
 .embeddedLayout {
@@ -683,7 +683,7 @@
 }
 
 .embedded .progressNav {
-  min-height: 86px;
+  min-height: 106px;
   align-items: start;
   gap: 12px;
   padding: 0;
@@ -701,8 +701,8 @@
   position: absolute;
   left: 18px;
   right: 18px;
-  top: 40px;
-  height: 2px;
+  top: 50px;
+  height: 3px;
   border-radius: 999px;
   background: rgba(253, 251, 246, .26);
 }
@@ -710,8 +710,8 @@
 .embedded .progressFill {
   left: 18px;
   bottom: auto;
-  top: 40px;
-  height: 2px;
+  top: 50px;
+  height: 3px;
   border-radius: 999px;
   opacity: 1;
 }
@@ -720,7 +720,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 84px;
+  min-height: 104px;
   padding: 0 4px;
   border: 0;
   border-radius: 0;
@@ -730,32 +730,37 @@
 }
 
 .embedded .progressStep span {
-  color: rgba(253, 251, 246, .82);
+  color: rgba(253, 251, 246, .85);
   font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .04em;
   line-height: 1;
 }
 
 .embedded .progressStep i {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  margin: 8px 0 7px;
-  border: 1px solid rgba(253, 251, 246, .42);
+  width: 48px;
+  height: 48px;
+  margin: 12px 0 16px;
+  border: 2px solid rgba(253, 251, 246, .40);
   border-radius: 999px;
-  background: rgba(253, 251, 246, .13);
-  color: var(--white);
-  font-size: 17px;
+  background: linear-gradient(135deg, #1e3050 0%, #2a4268 100%);
+  color: rgba(253, 251, 246, .75);
+  font-size: 21px;
   line-height: 1;
   box-shadow:
-    0 0 0 7px rgba(0, 19, 49, .82),
-    0 10px 22px rgba(0, 19, 49, .28),
-    inset 0 1px 0 rgba(255, 255, 255, .14);
+    0 0 0 6px rgba(0, 19, 49, .65),
+    0 8px 20px rgba(0, 0, 0, .35);
+  transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s ease, background .3s ease, border-color .3s ease;
 }
 
 .embedded .progressStep b {
-  font-size: 13px;
-  line-height: 1.2;
+  color: rgba(253, 251, 246, .84);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.25;
+  transition: color .2s ease;
 }
 
 .embedded .currentStep {
@@ -766,27 +771,51 @@
 }
 
 .embedded .currentStep i {
-  border-color: rgba(246, 190, 16, .88);
-  background: linear-gradient(135deg, rgba(199, 59, 142, .98), rgba(230, 36, 83, .92) 42%, rgba(243, 145, 37, .96));
+  border-color: #f6be10;
+  background: linear-gradient(135deg, #c73b8e 0%, #e62453 42%, #f39125 100%);
   color: var(--white);
-  box-shadow: 0 0 0 8px rgba(230, 36, 83, .30), 0 14px 30px rgba(230, 36, 83, .28);
+  box-shadow:
+    0 0 0 7px rgba(230, 36, 83, .25),
+    0 14px 30px rgba(230, 36, 83, .30);
+  animation: stepPulse 2s ease-in-out infinite;
+}
+
+@keyframes stepPulse {
+  0%, 100% { box-shadow: 0 0 0 7px rgba(230, 36, 83, .25), 0 14px 30px rgba(230, 36, 83, .30); }
+  50% { box-shadow: 0 0 0 12px rgba(230, 36, 83, .12), 0 14px 30px rgba(230, 36, 83, .45), 0 0 40px rgba(246, 190, 16, .20); }
 }
 
 .embedded .doneStep {
   background: transparent;
-  color: rgba(253, 251, 246, .86);
+  color: var(--white);
+  cursor: pointer;
 }
 
 .embedded .doneStep i {
-  border-color: rgba(41, 185, 117, .76);
-  background: rgba(41, 185, 117, .34);
+  border-color: #3dd68c;
+  background: linear-gradient(135deg, #167d4e 0%, #1fa362 100%);
+  color: var(--white);
+  box-shadow:
+    0 0 0 6px rgba(0, 19, 49, .65),
+    0 8px 20px rgba(41, 185, 117, .25);
+}
+
+.embedded .doneStep:hover i {
+  transform: scale(1.12);
+  border-color: #5df0a8;
+  box-shadow:
+    0 0 0 8px rgba(29, 185, 117, .18),
+    0 12px 28px rgba(41, 185, 117, .40);
+}
+
+.embedded .doneStep:hover b {
   color: var(--white);
 }
 
 .embedded .entrySwitch {
   grid-template-columns: 1.05fr 1fr;
   gap: 14px;
-  margin-bottom: clamp(12px, 1.8vh, 18px);
+  margin-bottom: clamp(20px, 2.6vh, 30px);
 }
 
 .embedded .entrySwitch button {
@@ -811,6 +840,7 @@
 }
 
 .embedded .stepKicker {
+  margin-bottom: 4px;
   font-size: 12px;
   letter-spacing: .17em;
 }
@@ -820,22 +850,26 @@
 .embedded .verifyPanel h2,
 .embedded .pricePanel h2 {
   max-width: 760px;
-  margin: 6px 0 8px;
-  font-size: clamp(34px, 2.75vw, 50px);
-  line-height: 1;
+  margin: 4px 0 6px;
+  font-size: clamp(23px, 1.9vw, 32px);
+  line-height: 1.18;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .embedded .stepPanel p,
 .embedded .resultLocked p,
 .embedded .verifyPanel p,
 .embedded .pricePanel p {
-  font-size: 15px;
+  font-size: 13.5px;
+  color: rgba(253, 251, 246, 0.72);
+  line-height: 1.45;
 }
 
 .embedded .cardGrid,
 .embedded .serviceGrid {
   gap: 10px 18px;
-  margin-top: clamp(14px, 2vh, 22px);
+  margin-top: clamp(18px, 2.4vh, 26px);
 }
 
 .embedded .selectionCard {
@@ -925,7 +959,9 @@
 .embedded .embeddedLeft .stepPanel {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
+  overflow: visible;
+  padding-right: 0;
+  padding-bottom: 0;
 }
 
 .embedded .resultLocked h2,
@@ -1098,39 +1134,74 @@
   z-index: 5;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
+  align-items: start;
+  gap: 0;
   max-width: 1240px;
   width: 100%;
   margin: 0 auto;
-  padding: 6px;
-  border-radius: 20px;
-  border: 1px solid var(--line);
-  background: rgba(0, 19, 49, .78);
-  backdrop-filter: blur(16px);
-  overflow: hidden;
+  padding: 16px 8px 12px;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(253, 251, 246, .12);
+  background: transparent;
+  backdrop-filter: none;
+  overflow: visible;
+}
+
+.progressNav::before {
+  content: "";
+  position: absolute;
+  left: calc(100% / 14);
+  right: calc(100% / 14);
+  top: 40px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(253, 251, 246, .15);
+  pointer-events: none;
+}
+
+.progressNavSimple {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  max-width: 960px;
+}
+
+.progressNavSimple::before {
+  left: calc(100% / 10) !important;
+  right: calc(100% / 10) !important;
+}
+
+.progressNavSimple .progressFill {
+  left: calc(100% / 10) !important;
 }
 
 .progressFill {
   position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 3px;
+  left: calc(100% / 14);
+  top: 40px;
+  bottom: auto;
+  height: 2px;
+  border-radius: 999px;
   background: linear-gradient(90deg, var(--pink), var(--magenta), var(--orange), var(--yellow), var(--green));
   transition: width .5s cubic-bezier(.22, 1, .36, 1);
+  opacity: 1;
 }
 
 .progressStep {
   position: relative;
   z-index: 1;
-  min-height: 42px;
-  padding: 5px 8px;
-  border: 1px solid rgba(253, 251, 246, .10);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, .045);
-  color: rgba(253, 251, 246, .56);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 90px;
+  padding: 0 4px 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(253, 251, 246, .65);
   font-family: inherit;
-  text-align: left;
+  text-align: center;
   cursor: default;
+  transition: color .2s ease;
 }
 
 .progressStep span,
@@ -1141,31 +1212,98 @@
 }
 
 .progressStep span {
-  color: rgba(253, 251, 246, .42);
-  font-size: 10px;
+  color: rgba(253, 251, 246, .55);
+  font-size: 12px;
   font-weight: 800;
+  line-height: 1;
+  margin-bottom: 2px;
 }
 
 .progressStep i {
-  margin: 1px 0;
-  font-size: 12px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 6px 0 8px;
+  border: 2px solid rgba(253, 251, 246, .30);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1a2d4a 0%, #243d63 100%);
+  color: rgba(253, 251, 246, .7);
+  font-size: 18px;
+  box-shadow:
+    0 0 0 5px rgba(0, 10, 30, .55),
+    0 6px 18px rgba(0, 0, 0, .30);
+  transition: transform .28s cubic-bezier(.34, 1.56, .64, 1), box-shadow .28s ease, background .3s ease, border-color .3s ease, color .2s ease;
 }
 
 .progressStep b {
-  font-size: 10px;
-  line-height: 1.15;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgba(253, 251, 246, .65);
+  transition: color .2s ease;
 }
 
 .currentStep {
   color: var(--white);
-  border-color: rgba(246, 190, 16, .55);
-  background: linear-gradient(135deg, rgba(199, 59, 142, .58), rgba(230, 36, 83, .44), rgba(243, 145, 37, .35));
+  cursor: default;
+}
+
+.currentStep span {
+  color: rgba(253, 251, 246, .75);
+}
+
+.currentStep i {
+  border-color: #f6be10;
+  background: linear-gradient(135deg, #c73b8e 0%, #e62453 42%, #f39125 100%);
+  color: var(--white);
+  box-shadow:
+    0 0 0 5px rgba(230, 36, 83, .22),
+    0 10px 28px rgba(230, 36, 83, .35);
+  animation: stepCirclePulse 2.2s ease-in-out infinite;
+}
+
+.currentStep b {
+  color: var(--white);
+}
+
+@keyframes stepCirclePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 5px rgba(230, 36, 83, .22), 0 10px 28px rgba(230, 36, 83, .35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(230, 36, 83, .10), 0 10px 28px rgba(230, 36, 83, .50), 0 0 36px rgba(246, 190, 16, .18);
+  }
 }
 
 .doneStep {
   color: var(--white);
-  border-color: rgba(41, 185, 117, .40);
-  background: rgba(41, 185, 117, .18);
+  cursor: pointer;
+}
+
+.doneStep span {
+  color: rgba(253, 251, 246, .65);
+}
+
+.doneStep i {
+  border-color: #3dd68c;
+  background: linear-gradient(135deg, #147a4c 0%, #1dab6a 100%);
+  color: var(--white);
+  box-shadow:
+    0 0 0 5px rgba(0, 10, 30, .55),
+    0 6px 18px rgba(41, 185, 117, .25);
+}
+
+.doneStep:hover i {
+  transform: scale(1.15) translateY(-2px);
+  border-color: #6ef5b8;
+  box-shadow:
+    0 0 0 7px rgba(29, 185, 117, .16),
+    0 12px 28px rgba(41, 185, 117, .45);
+}
+
+.doneStep:hover b {
+  color: var(--white);
 }
 
 .consultationShell {
@@ -1833,6 +1971,12 @@
     min-height: 48px;
   }
 
+  .embeddedWorkspace {
+    padding-top: 18px;
+    padding-bottom: 8px;
+    gap: 28px;
+  }
+
   .consultationShell {
     padding: 10px;
   }
@@ -2028,5 +2172,702 @@
   .secondaryAction {
     padding: 0 14px;
     font-size: 11px;
+  }
+}
+
+/* =========================================================
+   FIRST SCREEN: PROJECT CALCULATION SELECTION VIEW (APPLE-INSPIRED)
+========================================================= */
+
+.selectionPage {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: min(1200px, 100%) !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: clamp(16px, 2.5vh, 32px) clamp(20px, 3vw, 44px) clamp(28px, 4vh, 48px) !important;
+  grid-template-columns: 1fr !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-sizing: border-box !important;
+}
+
+.selectionHeroContainer {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* 1. TYPOGRAPHIC HEADER */
+.selectionHeader {
+  margin-bottom: clamp(24px, 3.4vh, 40px);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.selectionKicker {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--yellow);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  opacity: 0.95;
+}
+
+.selectionTitle {
+  font-size: clamp(28px, 3.2vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #FFFFFF;
+  margin: 0 0 10px;
+  line-height: 1.15;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+}
+
+.selectionSubTitle {
+  font-size: clamp(16px, 1.5vw, 20px);
+  font-weight: 400;
+  color: rgba(253, 251, 246, 0.9);
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+
+.selectionLead {
+  font-size: clamp(13px, 1vw, 14px);
+  color: rgba(253, 251, 246, 0.6);
+  margin: 0 auto;
+  max-width: 540px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* 2. TWO CALCULATOR CARDS */
+.selectionTabsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(20px, 2.4vw, 32px);
+  width: 100%;
+  max-width: 960px;
+  margin-bottom: clamp(28px, 3.6vh, 44px);
+}
+
+.selectionTabCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 380px;
+  padding: clamp(28px, 2.6vw, 36px);
+  border-radius: 14px;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.28s ease;
+}
+
+.selectionTabCard:hover {
+  transform: translateY(-3px);
+}
+
+/* Left primary card (Warm yellow accent, understated dark navy glass) */
+.tabFastEstimate {
+  background: rgba(10, 26, 49, 0.72);
+  border: 1px solid rgba(250, 190, 44, 0.35);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+.tabFastEstimate:hover {
+  background: rgba(12, 30, 56, 0.82);
+  border-color: rgba(250, 190, 44, 0.7);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+}
+
+/* Right secondary card (Restrained neutral glass) */
+.tabDetailedSpecs {
+  background: rgba(10, 26, 49, 0.58);
+  border: 1px solid rgba(253, 251, 246, 0.16);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+}
+
+.tabDetailedSpecs:hover {
+  background: rgba(12, 30, 56, 0.75);
+  border-color: rgba(253, 251, 246, 0.38);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.4);
+}
+
+/* Card labels */
+.tabBadgeRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.tabTagFast {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--yellow);
+  text-transform: uppercase;
+}
+
+.tabTagDetailed {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(253, 251, 246, 0.7);
+  text-transform: uppercase;
+}
+
+.tabHeadline {
+  font-size: clamp(20px, 1.8vw, 24px);
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0 0 10px;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  min-height: 56px;
+}
+
+.tabDescription {
+  font-size: 13.5px;
+  color: rgba(253, 251, 246, 0.65);
+  line-height: 1.5;
+  margin: 0 0 22px;
+  min-height: 42px;
+}
+
+/* Concise benefit list */
+.tabFeatureList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 28px;
+  padding: 0;
+  list-style: none;
+}
+
+.tabFeatureItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(253, 251, 246, 0.85);
+  line-height: 1.4;
+}
+
+.tabFeatureIcon {
+  color: var(--yellow);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tabDetailedSpecs .tabFeatureIcon {
+  color: rgba(253, 251, 246, 0.6);
+}
+
+/* 3. BUTTONS (Clean, proportional, Apple-inspired) */
+.tabButtonWrapper {
+  margin-top: auto;
+}
+
+.tabActionBtn {
+  width: 100%;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  border: none;
+  background: var(--yellow);
+  color: #071A33;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.tabActionBtn:hover {
+  background: #fcd34d;
+  transform: translateY(-1px);
+}
+
+.tabActionBtnDetailed {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(253, 251, 246, 0.24);
+  color: #FFFFFF;
+}
+
+.tabActionBtnDetailed:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(253, 251, 246, 0.45);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.tabActionArrow {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.selectionTabCard:hover .tabActionArrow {
+  transform: translateX(3px);
+}
+
+/* 4. REASSURANCE STRIP (Subtle, balanced, 3 evenly distributed columns) */
+.selectionTrustRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 2.4vw, 36px);
+  width: 100%;
+  max-width: 960px;
+  padding-top: clamp(20px, 2.6vh, 28px);
+  border-top: 1px solid rgba(253, 251, 246, 0.12);
+  box-sizing: border-box;
+}
+
+.selectionTrustItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+}
+
+.selectionTrustIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: rgba(253, 251, 246, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selectionTrustIcon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
+.selectionTrustItem strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 3px;
+  letter-spacing: -0.01em;
+}
+
+.selectionTrustItem p {
+  font-size: 12px;
+  color: rgba(253, 251, 246, 0.58);
+  margin: 0;
+  line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+  .selectionTabsGrid {
+    grid-template-columns: 1fr;
+  }
+  .selectionTrustRow {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* =========================================================
+   PROPERTY CARDS WITH IMAGES & ICONS (STEP 0)
+========================================================= */
+
+.propertyGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+
+@media (max-width: 1100px) {
+  .propertyGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .propertyGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+.propertyCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(253, 251, 246, 0.16);
+  background: rgba(8, 22, 42, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.propertyCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(250, 190, 44, 0.55);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 16px rgba(250, 190, 44, 0.15);
+}
+
+.propertyCardSelected {
+  border: 2px solid #FABE2C !important;
+  box-shadow: 0 0 20px rgba(250, 190, 44, 0.35), inset 0 0 14px rgba(250, 190, 44, 0.12) !important;
+  background: rgba(14, 32, 60, 0.92) !important;
+}
+
+.propertyCardBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #FABE2C;
+  color: #071A33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.propertyCardMedia {
+  position: relative;
+  width: 100%;
+  height: 135px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.propertyCardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.propertyCard:hover .propertyCardImage {
+  transform: scale(1.06);
+}
+
+.propertyCardFallbackGraphic {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(250, 190, 44, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+  color: var(--yellow);
+}
+
+.propertyCardFallbackGraphic svg {
+  width: 42px;
+  height: 42px;
+}
+
+.propertyCardInfo {
+  padding: 10px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: rgba(6, 18, 36, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.propertyCardTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.propertyCardSubtitle {
+  font-size: 11px;
+  color: rgba(253, 251, 246, 0.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   SIDEBAR MODE CARD
+========================================================= */
+
+.sidebarModeCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(253, 251, 246, 0.14);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.sidebarModeKicker {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--yellow);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sidebarModeTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--white);
+  margin: 0;
+}
+
+.sidebarModeDesc {
+  font-size: 11px;
+  color: rgba(253, 251, 246, 0.65);
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+.sidebarModeSwitchBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(250, 190, 44, 0.12);
+  border: 1px solid rgba(250, 190, 44, 0.35);
+  border-radius: 6px;
+  color: var(--yellow);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebarModeSwitchBtn:hover {
+  background: rgba(250, 190, 44, 0.22);
+  border-color: rgba(250, 190, 44, 0.6);
+  transform: translateY(-1px);
+}
+
+.sidebarBackBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px solid rgba(253, 251, 246, 0.12);
+  border-radius: 6px;
+  color: rgba(253, 251, 246, 0.7);
+  font-size: 10.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.sidebarBackBtn:hover {
+  background: rgba(253, 251, 246, 0.06);
+  color: var(--white);
+  border-color: rgba(253, 251, 246, 0.25);
+}
+
+/* =========================================================
+   SCOPE & CONDITION CARDS (STEPS 1 & 2)
+========================================================= */
+
+.scopeCardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 640px) {
+  .scopeCardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.scopeCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(253, 251, 246, 0.16);
+  background: rgba(8, 22, 42, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.scopeCard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(250, 190, 44, 0.55);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.scopeCardSelected {
+  border: 2px solid #FABE2C !important;
+  box-shadow: 0 0 20px rgba(250, 190, 44, 0.35), inset 0 0 12px rgba(250, 190, 44, 0.1) !important;
+  background: rgba(14, 32, 60, 0.92) !important;
+}
+
+.scopeCardIcon {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--yellow);
+}
+
+.scopeCardIcon svg {
+  width: 38px;
+  height: 38px;
+}
+
+.scopeCardTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 4px;
+}
+
+.scopeCardDesc {
+  font-size: 11px;
+  color: rgba(253, 251, 246, 0.65);
+}
+
+.conditionCardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 640px) {
+  .conditionCardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.conditionCard {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  padding: 18px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(253, 251, 246, 0.16);
+  background: rgba(8, 22, 42, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.conditionCard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(250, 190, 44, 0.55);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.conditionCardSelected {
+  border: 2px solid #FABE2C !important;
+  box-shadow: 0 0 20px rgba(250, 190, 44, 0.35), inset 0 0 12px rgba(250, 190, 44, 0.1) !important;
+  background: rgba(14, 32, 60, 0.92) !important;
+}
+
+.conditionCardIcon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--yellow);
+}
+
+.conditionCardIcon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.conditionCardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.conditionCardTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.conditionCardDesc {
+  font-size: 11px;
+  color: rgba(253, 251, 246, 0.65);
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .selectionTabsGrid {
+    grid-template-columns: 1fr;
+  }
+  .selectionTrustRow {
+    grid-template-columns: 1fr;
+  }
+  .propertyGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

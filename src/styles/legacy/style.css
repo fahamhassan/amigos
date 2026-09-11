@@ -1240,6 +1240,10 @@ ACTIVE PALETTE
 POINTER EVENTS FIX
 ----------------------------------------------------*/
 
+.mobile-color-dock {
+    display: none;
+}
+
 .site-header {
     pointer-events: auto;
 }
@@ -1463,29 +1467,116 @@ RESPONSIVE — MOBILE (≤768px)
         padding: 14px 20px;
     }
 
-    .paint-trigger {
-        width: 42px;
-        height: 42px;
+    /* Hide floating paint points on mobile */
+    .paint-point {
+        display: none !important;
     }
 
-    .left {
-        left: 15%;
-        top: 46%;
+    .paint-finish-panel {
+        display: none !important;
     }
 
-    .right {
-        right: 15%;
-        top: 45%;
+    .paint-screen-banner {
+        top: 10% !important;
+        padding: 0 16px;
     }
 
-    .front {
-        top: 60%;
+    .paint-screen-banner h2 {
+        font-size: 18px !important;
     }
 
-    .ceiling {
-        top: 14%;
+    .paint-screen-banner p {
+        font-size: 12px !important;
     }
 
+    .mobile-color-dock {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 60;
+        width: auto;
+        max-width: 92%;
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: rgba(7, 26, 51, 0.85);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+        pointer-events: auto;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+
+    .paint-icons.show .mobile-color-dock {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .mobile-dock-title {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 8px;
+    }
+
+    .mobile-swatches {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .mobile-swatch {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background-color: var(--c);
+        border: 3px solid rgba(255, 255, 255, 0.85);
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .mobile-swatch:active,
+    .mobile-swatch.active {
+        transform: scale(1.18);
+        border-color: #f6be10;
+        box-shadow: 0 0 0 2px #f6be10, 0 6px 16px rgba(0, 0, 0, 0.45);
+    }
+
+    .mobile-swatch-custom {
+        position: relative;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 2px dashed rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #fff;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .mobile-palette-custom {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
 }
 
 /*----------------------------------------------------
@@ -10084,30 +10175,45 @@ body {
 
 .site-header {
     background: transparent !important;
+    border-bottom: 1px solid rgba(253, 251, 246, 0.08) !important;
 }
 
 .site-header.is-scrolled {
     background: rgba(7, 20, 38, .94) !important;
+    border-bottom: 1px solid rgba(253, 251, 246, 0.12) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
 }
 
 .site-header .logo img {
-    height: 50px !important;
+    height: 44px !important;
     width: auto !important;
     object-fit: contain !important;
 }
 
 .site-header.is-scrolled .logo img {
-    height: 42px !important;
+    height: 38px !important;
 }
 
 .site-nav {
-    gap: 30px !important;
+    gap: 28px !important;
+}
+
+.site-nav a {
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.01em !important;
+    color: rgba(253, 251, 246, 0.8) !important;
+    transition: color 0.2s ease !important;
+}
+
+.site-nav a:hover {
+    color: #FFFFFF !important;
 }
 
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .header-btn,
@@ -10115,40 +10221,41 @@ body {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    min-height: 42px;
-    padding: 10px 22px !important;
-    border-radius: 999px !important;
-    background: rgba(255, 255, 255, .12) !important;
-    border: 1px solid rgba(255, 255, 255, .42) !important;
-    color: #fff !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
+    gap: 7px;
+    min-height: 38px !important;
+    padding: 8px 18px !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, .08) !important;
+    border: 1px solid rgba(255, 255, 255, .28) !important;
+    color: #FFFFFF !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
     line-height: 1 !important;
+    letter-spacing: 0.01em !important;
     text-decoration: none !important;
     box-shadow: none !important;
     animation: none !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    transition: transform .3s ease, background .3s ease, border-color .3s ease, color .3s ease !important;
+    transition: transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease !important;
 }
 
 .customer-header-btn {
-    padding-inline: 16px !important;
+    padding-inline: 14px !important;
 }
 
 .customer-header-btn svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     flex: 0 0 auto;
 }
 
 .header-btn:hover,
 .customer-header-btn:hover {
-    transform: translateY(-2px) !important;
-    background: rgba(255, 255, 255, .2) !important;
-    border-color: rgba(255, 255, 255, .68) !important;
-    color: #fff !important;
+    transform: translateY(-1px) !important;
+    background: rgba(255, 255, 255, .16) !important;
+    border-color: rgba(255, 255, 255, .5) !important;
+    color: #FFFFFF !important;
 }
 
 .site-footer {
@@ -11190,37 +11297,21 @@ html[data-theme="amigos-dark"] body[data-page="home"] .quote-section {
         linear-gradient(135deg, #F6BE10 0%, #F39125 42%, #E62453 100%) !important;
 }
 
-body[data-page="home"] .home-calculator-cta {
-    background-color: #071A33 !important;
-    background-image:
-        linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .03)),
-        linear-gradient(90deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .01) 48%, rgba(255, 255, 255, .04)),
-        url("/assets/calculator-glass-bg.png"),
-        #071A33 !important;
-    background-size: auto, auto, cover, auto !important;
-    background-position: center, center, center bottom, center !important;
-    background-repeat: no-repeat !important;
-    animation: none !important;
-}
-
+body[data-page="home"] .home-calculator-cta,
 html[data-theme="amigos-dark"] body[data-page="home"] section.home-calculator-cta {
     background-color: #071A33 !important;
     background-image:
-        linear-gradient(180deg, rgba(0, 19, 49, .20), rgba(0, 19, 49, .32)),
-        linear-gradient(90deg, rgba(0, 19, 49, .24), rgba(0, 19, 49, .08) 48%, rgba(0, 19, 49, .22)),
-        url("/assets/calculator-glass-bg.png"),
-        #071A33 !important;
-    background-size: auto, auto, cover, auto !important;
-    background-position: center, center, center bottom, center !important;
+        linear-gradient(180deg, rgba(7, 26, 51, 0.88) 0%, rgba(7, 26, 51, 0.65) 45%, rgba(7, 26, 51, 0.25) 80%, rgba(7, 26, 51, 0.1) 100%),
+        url("/assets/calculator-glass-bg.png") !important;
+    background-size: cover, cover !important;
+    background-position: center, center bottom !important;
     background-repeat: no-repeat !important;
     animation: none !important;
 }
 
 body[data-page="home"] .home-calculator-cta::before,
 html[data-theme="amigos-dark"] body[data-page="home"] section.home-calculator-cta::before {
-    background:
-        radial-gradient(circle at 16% 10%, rgba(255, 255, 255, .08), transparent 30%),
-        radial-gradient(circle at 84% 76%, rgba(255, 255, 255, .045), transparent 34%) !important;
+    background: radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.04), transparent 60%) !important;
     opacity: 1 !important;
 }
 

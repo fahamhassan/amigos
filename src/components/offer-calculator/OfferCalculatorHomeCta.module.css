@@ -1,5 +1,5 @@
 .section {
-  --home-calculator-header-height: 106px;
+  --home-calculator-header-height: 90px;
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -7,11 +7,11 @@
   height: 100svh;
   min-height: 0;
   display: flex;
-  align-items: flex-start;
-  padding: clamp(10px, 1.6vh, 22px) clamp(22px, 3vw, 44px);
+  align-items: center;
+  justify-content: center;
+  padding: clamp(14px, 2vh, 28px) clamp(20px, 2.5vw, 40px);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .03)),
-    linear-gradient(90deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .01) 48%, rgba(255, 255, 255, .04)),
+    linear-gradient(180deg, rgba(7, 26, 51, 0.88) 0%, rgba(7, 26, 51, 0.65) 45%, rgba(7, 26, 51, 0.25) 80%, rgba(7, 26, 51, 0.1) 100%),
     url("/assets/calculator-glass-bg.png") center bottom / cover no-repeat,
     #071A33;
   color: #FDFBF6;
@@ -20,8 +20,8 @@
 }
 
 .section :global(.offerCalculatorEmbedded) {
-  height: min(100%, calc(100svh - var(--home-calculator-header-height) - 28px));
-  max-height: calc(100svh - var(--home-calculator-header-height) - 28px);
+  height: min(100%, calc(100svh - var(--home-calculator-header-height) - 20px));
+  max-height: calc(100svh - var(--home-calculator-header-height) - 20px);
 }
 
 .section::before {
@@ -29,8 +29,7 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 16% 10%, rgba(255, 255, 255, .08), transparent 30%),
-    radial-gradient(circle at 84% 76%, rgba(255, 255, 255, .045), transparent 34%);
+    radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.04), transparent 60%);
   pointer-events: none;
 }
 
@@ -48,54 +47,26 @@
   }
 }
 
-:global(body[data-page="home"]) .section {
-  background-color: #071A33 !important;
-  background-image:
-    linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .03)),
-    linear-gradient(90deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .01) 48%, rgba(255, 255, 255, .04)),
-    url("/assets/calculator-glass-bg.png"),
-    #071A33 !important;
-  background-size: auto, auto, cover, auto !important;
-  background-position: center, center, center bottom, center !important;
-  background-repeat: no-repeat !important;
-  animation: none !important;
-}
-
-:global(html[data-theme="amigos-dark"] body[data-page="home"]) .section {
-  background-color: #071A33 !important;
-  background-image:
-    linear-gradient(180deg, rgba(0, 19, 49, .20), rgba(0, 19, 49, .32)),
-    linear-gradient(90deg, rgba(0, 19, 49, .24), rgba(0, 19, 49, .08) 48%, rgba(0, 19, 49, .22)),
-    url("/assets/calculator-glass-bg.png"),
-    #071A33 !important;
-  background-size: auto, auto, cover, auto !important;
-  background-position: center, center, center bottom, center !important;
-  background-repeat: no-repeat !important;
-  animation: none !important;
-}
-
+:global(body[data-page="home"]) .section,
 :global(body[data-page="home"] .home-calculator-cta) {
   background-color: #071A33 !important;
   background-image:
-    linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .03)),
-    linear-gradient(90deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .01) 48%, rgba(255, 255, 255, .04)),
-    url("/assets/calculator-glass-bg.png"),
-    #071A33 !important;
-  background-size: auto, auto, cover, auto !important;
-  background-position: center, center, center bottom, center !important;
+    linear-gradient(180deg, rgba(7, 26, 51, 0.88) 0%, rgba(7, 26, 51, 0.65) 45%, rgba(7, 26, 51, 0.25) 80%, rgba(7, 26, 51, 0.1) 100%),
+    url("/assets/calculator-glass-bg.png") !important;
+  background-size: cover, cover !important;
+  background-position: center, center bottom !important;
   background-repeat: no-repeat !important;
   animation: none !important;
 }
 
+:global(html[data-theme="amigos-dark"] body[data-page="home"]) .section,
 :global(html[data-theme="amigos-dark"] body[data-page="home"] .home-calculator-cta) {
   background-color: #071A33 !important;
   background-image:
-    linear-gradient(180deg, rgba(0, 19, 49, .20), rgba(0, 19, 49, .32)),
-    linear-gradient(90deg, rgba(0, 19, 49, .24), rgba(0, 19, 49, .08) 48%, rgba(0, 19, 49, .22)),
-    url("/assets/calculator-glass-bg.png"),
-    #071A33 !important;
-  background-size: auto, auto, cover, auto !important;
-  background-position: center, center, center bottom, center !important;
+    linear-gradient(180deg, rgba(5, 18, 38, 0.92) 0%, rgba(5, 18, 38, 0.7) 45%, rgba(5, 18, 38, 0.3) 80%, rgba(5, 18, 38, 0.15) 100%),
+    url("/assets/calculator-glass-bg.png") !important;
+  background-size: cover, cover !important;
+  background-position: center, center bottom !important;
   background-repeat: no-repeat !important;
   animation: none !important;
 }

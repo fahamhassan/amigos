@@ -27,8 +27,8 @@ export function createVerificationCode() {
   return String(crypto.randomInt(1000, 10000));
 }
 
-export async function createOrUpdateCalculation(project) {
-  const price = calculateOfferPrice(project);
+export async function createOrUpdateCalculation(project, options = {}) {
+  const price = calculateOfferPrice(project, options);
   const id = crypto.randomUUID();
 
   const [session] = await sql`
@@ -88,12 +88,14 @@ async function createProvisionalCrmLead(session) {
     `Quantities: ${JSON.stringify(session.quantities || {})}`
   ].filter(Boolean).join("\n");
 
+  const leadSource = session.projectNotes?.includes("Quick Estimate") ? "QUICK_QUOTE" : "DETAILED_QUOTE";
+
   const [consultation] = await sql`
     insert into consultations (id, name, email, project_type, message, source, metadata)
     values (
       ${crypto.randomUUID()}, ${"Online visitor"}, ${session.email}, ${"Online Request"},
-      ${message}, ${"OFFER_CALCULATOR"},
-      ${sql.json({ calculatorSessionId: session.id, provisional: true })}
+      ${message}, ${leadSource},
+      ${sql.json({ calculatorSessionId: session.id, source: leadSource, provisional: true })}
     )
     returning id
   `;
@@ -107,9 +109,10 @@ async function createProvisionalCrmLead(session) {
     values (
       ${crypto.randomUUID()}, ${consultation.id}, ${title}, ${service}, ${"NEW_LEAD"}, ${"NORMAL"},
       ${session.maxCents}, ${session.minCents}, ${session.maxCents}, ${session.currency},
-      ${"OFFER_CALCULATOR"}, ${"Review"},
+      ${leadSource}, ${"Review"},
       ${sql.json({
         calculatorSessionId: session.id,
+        source: leadSource,
         provisional: true,
         components: session.components,
         services: session.services,
@@ -226,10 +229,12 @@ export async function submitOfferRequest({ sessionId, customerInfo }) {
   `;
 
   const workflow = customerInfo.requestedAction === "CONSULTATION" ? "Contact Customer" : "Review";
+  const leadSource = session.projectNotes?.includes("Quick Estimate") ? "QUICK_QUOTE" : "DETAILED_QUOTE";
   let consultation = { id: session.consultationId };
   let project = { id: session.projectId };
   const metadata = {
     calculatorSessionId: session.id,
+    source: leadSource,
     provisional: false,
     components: session.components,
     services: session.services,
@@ -243,7 +248,7 @@ export async function submitOfferRequest({ sessionId, customerInfo }) {
     [consultation] = await sql`
       update consultations
       set name = ${name}, email = ${customerInfo.email}, phone = ${customerInfo.phone},
-        project_type = ${"Online Request"}, message = ${message}, metadata = ${sql.json(metadata)}, updated_at = now()
+        project_type = ${"Online Request"}, message = ${message}, source = ${leadSource}, metadata = ${sql.json(metadata)}, updated_at = now()
       where id = ${consultation.id}
       returning id
     `;
@@ -251,7 +256,7 @@ export async function submitOfferRequest({ sessionId, customerInfo }) {
     [consultation] = await sql`
       insert into consultations (id, name, email, phone, project_type, message, source, metadata)
       values (${crypto.randomUUID()}, ${name}, ${customerInfo.email}, ${customerInfo.phone}, ${"Online Request"},
-        ${message}, ${"OFFER_CALCULATOR"}, ${sql.json(metadata)})
+        ${message}, ${leadSource}, ${sql.json(metadata)})
       returning id
     `;
   }
@@ -262,7 +267,7 @@ export async function submitOfferRequest({ sessionId, customerInfo }) {
       set consultation_id = ${consultation.id}, property_id = ${property.id}, title = ${title}, service = ${service},
         estimated_value_cents = ${session.maxCents}, estimated_min_cents = ${session.minCents},
         estimated_max_cents = ${session.maxCents}, currency = ${session.currency}, workflow = ${workflow},
-        metadata = ${sql.json(metadata)}, updated_at = now()
+        source = ${leadSource}, metadata = ${sql.json(metadata)}, updated_at = now()
       where id = ${project.id}
       returning id
     `;
@@ -276,7 +281,7 @@ export async function submitOfferRequest({ sessionId, customerInfo }) {
       values (
         ${crypto.randomUUID()}, ${consultation.id}, ${property.id}, ${title}, ${service}, ${"NEW_LEAD"}, ${"NORMAL"},
         ${session.maxCents}, ${session.minCents}, ${session.maxCents}, ${session.currency},
-        ${"OFFER_CALCULATOR"}, ${workflow}, ${sql.json(metadata)}
+        ${leadSource}, ${workflow}, ${sql.json(metadata)}
       )
       returning id
     `;

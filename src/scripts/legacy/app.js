@@ -619,4 +619,34 @@ function drawHighlight(maskName) {
     ctx.restore();
 }
 
+function initMobileColorDock() {
+    const mobileSwatches = document.querySelectorAll(".mobile-swatch");
+    mobileSwatches.forEach((swatch) => {
+        swatch.addEventListener("click", (e) => {
+            e.stopPropagation();
+            mobileSwatches.forEach((s) => s.classList.remove("active"));
+            swatch.classList.add("active");
+            wallState["front-wall"] = swatch.dataset.color;
+            renderScene();
+        });
+    });
+
+    const mobileCustom = document.querySelector(".mobile-palette-custom");
+    if (mobileCustom) {
+        mobileCustom.addEventListener("input", (e) => {
+            e.stopPropagation();
+            mobileSwatches.forEach((s) => s.classList.remove("active"));
+            wallState["front-wall"] = mobileCustom.value;
+            renderScene();
+        });
+        mobileCustom.addEventListener("change", (e) => {
+            e.stopPropagation();
+            mobileSwatches.forEach((s) => s.classList.remove("active"));
+            wallState["front-wall"] = mobileCustom.value;
+            renderScene();
+        });
+    }
+}
+
 init();
+initMobileColorDock();
