@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useAmigosTheme } from "@/lib/useAmigosTheme";
 
 const serviceHoverGradients = [
   {
@@ -26,7 +27,7 @@ export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isCustomerLoggedIn, setIsCustomerLoggedIn] = useState(false);
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const { isDark: isDarkTheme, toggleTheme } = useAmigosTheme();
   const lastHoverVariants = useRef(new WeakMap());
 
   useEffect(() => {
@@ -60,26 +61,6 @@ export default function Header() {
       active = false;
     };
   }, []);
-
-  useEffect(() => {
-    const savedTheme = window.localStorage.getItem("amigos-theme");
-    const shouldUseDarkTheme = savedTheme === "amigos-dark";
-
-    document.documentElement.dataset.theme = shouldUseDarkTheme ? "amigos-dark" : "amigos-light";
-    setIsDarkTheme(shouldUseDarkTheme);
-  }, []);
-
-  const toggleTheme = () => {
-    setIsDarkTheme((currentTheme) => {
-      const nextTheme = !currentTheme;
-      const themeName = nextTheme ? "amigos-dark" : "amigos-light";
-
-      document.documentElement.dataset.theme = themeName;
-      window.localStorage.setItem("amigos-theme", themeName);
-
-      return nextTheme;
-    });
-  };
 
   const setRandomServiceHover = (event) => {
     const item = event.currentTarget;

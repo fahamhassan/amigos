@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { sql } from "@/lib/db";
-import { calculateOfferPrice } from "@/lib/offerCalculator/pricing";
+import { calculateOfferPrice, calculateQuickQuotePrice } from "@/lib/offerCalculator/pricing";
+import { getPricingSettings } from "@/lib/offerCalculator/pricingSettings";
 
 function hashCode(code, sessionId) {
   return crypto.createHash("sha256").update(`${sessionId}:${code}:${process.env.SESSION_SECRET || "amigos"}`).digest("hex");
@@ -28,18 +29,25 @@ export function createVerificationCode() {
 }
 
 export async function createOrUpdateCalculation(project, options = {}) {
-  const price = calculateOfferPrice(project, options);
+  const settings = options.settings || (await getPricingSettings());
+  const price = options.quickQuote
+    ? calculateQuickQuotePrice(options.quickQuote, settings)
+    : calculateOfferPrice(project, { ...options, settings });
   const id = crypto.randomUUID();
+
+  const leadSource = options.source === "QUICK_QUOTE" ? "QUICK_QUOTE" : "DETAILED_QUOTE";
 
   const [session] = await sql`
     insert into offer_calculator_sessions (
       id, mode, status, property_type, room_type, components, services, quantities,
-      project_notes, estimated_min_cents, estimated_max_cents, currency
+      project_notes, estimated_min_cents, estimated_max_cents, currency,
+      condition, postal_code, city, source
     )
     values (
       ${id}, ${project.mode}, ${"CALCULATED"}, ${project.propertyType}, ${project.roomType || null},
       ${sql.json(project.components)}, ${sql.json(project.services)}, ${sql.json(project.quantities)},
-      ${project.projectNotes || null}, ${price.minCents}, ${price.maxCents}, ${price.currency}
+      ${project.projectNotes || null}, ${price.minCents}, ${price.maxCents}, ${price.currency},
+      ${options.condition || null}, ${options.postalCode || null}, ${options.locationCity || null}, ${leadSource}
     )
     returning id, status, currency
   `;
@@ -88,7 +96,7 @@ async function createProvisionalCrmLead(session) {
     `Quantities: ${JSON.stringify(session.quantities || {})}`
   ].filter(Boolean).join("\n");
 
-  const leadSource = session.projectNotes?.includes("Quick Estimate") ? "QUICK_QUOTE" : "DETAILED_QUOTE";
+  const leadSource = session.source === "QUICK_QUOTE" ? "QUICK_QUOTE" : "DETAILED_QUOTE";
 
   const [consultation] = await sql`
     insert into consultations (id, name, email, project_type, message, source, metadata)
@@ -175,7 +183,8 @@ export async function getVerifiedSession(sessionId) {
     select id, mode, status, email, email_verified_at as "emailVerifiedAt",
       property_type as "propertyType", room_type as "roomType", components, services, quantities,
       project_notes as "projectNotes", estimated_min_cents as "minCents",
-      estimated_max_cents as "maxCents", currency, project_id as "projectId"
+      estimated_max_cents as "maxCents", currency, project_id as "projectId",
+      condition, postal_code as "postalCode", city, source
     from offer_calculator_sessions
     where id = ${sessionId}
   `;
@@ -229,7 +238,7 @@ export async function submitOfferRequest({ sessionId, customerInfo }) {
   `;
 
   const workflow = customerInfo.requestedAction === "CONSULTATION" ? "Contact Customer" : "Review";
-  const leadSource = session.projectNotes?.includes("Quick Estimate") ? "QUICK_QUOTE" : "DETAILED_QUOTE";
+  const leadSource = session.source === "QUICK_QUOTE" ? "QUICK_QUOTE" : "DETAILED_QUOTE";
   let consultation = { id: session.consultationId };
   let project = { id: session.projectId };
   const metadata = {

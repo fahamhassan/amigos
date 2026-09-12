@@ -1,3 +1,15 @@
+/* The site's typeface. It is declared here as well as in the legacy sheets
+   because the standalone /offer-calculator page renders the component without
+   loading partial.css or style.css — without this the family resolved to
+   nothing and silently fell back to SpartanMB, so the two calculators ran in
+   different fonts. Same family name and source as the site, so the browser
+   reuses the one file. */
+@font-face {
+  font-family: "themeFont";
+  src: url("/fonts/n.woff2") format("woff2");
+  font-display: swap;
+}
+
 @font-face {
   font-family: "offerCalculatorFont";
   src: url("/fonts/SpartanMB-Regular.otf") format("opentype");
@@ -21,6 +33,8 @@
   box-sizing: border-box;
 }
 
+/* The calculator runs as a self-contained app frame: no site chrome, no page
+   scroll. Everything has to fit inside one viewport. */
 :global(body[data-page="offer-calculator"] a[aria-label="Chat with Amigos Maler on WhatsApp"]),
 :global(body[data-page="offer-calculator"] .whatsapp-float),
 :global(body[data-page="offer-calculator"] .site-header),
@@ -1007,7 +1021,21 @@
   border: 1px solid var(--line);
   background: rgba(0, 19, 49, .58);
   box-shadow: 0 18px 48px rgba(0, 0, 0, .22);
+}
+
+.heroCopy,
+.securityCard {
   backdrop-filter: blur(16px);
+}
+
+/* The shell is only blurred on wide screens. backdrop-filter makes an element the
+   containing block for fixed descendants, so blurring it here re-anchored the fixed
+   .navActions bar to the shell rather than the viewport — on phones that pushed
+   CONTINUE roughly 500px below the fold. */
+@media (min-width: 981px) {
+  .consultationShell {
+    backdrop-filter: blur(16px);
+  }
 }
 
 .heroCopy {
@@ -1597,7 +1625,19 @@
   padding: 12px 14px;
 }
 
+/* The name/phone/e-mail fields were the only ones in the form that carried no
+   radius, so they read as sharp rectangles against a wholly rounded UI. The
+   quantity input is deliberately excluded: it sits inside a rounded,
+   overflow-hidden wrapper and would double-round. 16px matches that wrapper,
+   the notes textarea and the verification-code inputs. */
+.emailField input,
+.customerGrid input {
+  border: 1px solid rgba(253, 251, 246, .14);
+  border-radius: 16px;
+}
+
 .customerGrid input[aria-invalid="true"] {
+  border-radius: 16px;
   border: 1px solid rgba(230, 36, 83, .72);
   box-shadow: 0 0 0 3px rgba(230, 36, 83, .12);
 }
@@ -2029,6 +2069,17 @@
     left: 14px;
     right: 14px;
     bottom: 14px;
+  }
+
+  /* The hero card filled almost the whole first screen on phones, pushing the
+     calculator itself out of view. Trim it so step 01 is visible on load. */
+  .heroCopy {
+    overflow: visible;
+    min-height: 0;
+  }
+
+  .heroCopy ul {
+    display: none;
   }
 
   .stepPanel,
@@ -2870,4 +2921,1865 @@
   .propertyGrid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* =======================================================================
+   HOMEPAGE QUICK QUOTE BLOCK (spec §8)
+   ~70% Quick Quote calculator, ~30% Detailed Quote CTA.
+   On mobile the two stack, Quick Quote first — never squeezed side by side.
+   ======================================================================= */
+
+.embedded.homeLayout {
+  grid-template-columns: minmax(0, 7fr) minmax(280px, 3fr);
+}
+
+.embedded.homeLayout .embeddedWorkspace {
+  order: 1;
+  /* intro header + progress nav + step panel */
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.embedded.homeLayout .embeddedRail {
+  order: 2;
+  align-content: space-between;
+  gap: clamp(20px, 3vh, 32px);
+  border-right: 0;
+  border-left: 1px solid rgba(253, 251, 246, .20);
+}
+
+.quickQuoteIntro h2 {
+  margin: 0 0 6px;
+  font-size: clamp(21px, 2.3vw, 32px);
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -.01em;
+}
+
+.quickQuoteIntro p {
+  margin: 0;
+  color: rgba(253, 251, 246, .7);
+  font-size: clamp(12px, 1.05vw, 14px);
+  line-height: 1.5;
+}
+
+.detailedCtaList {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.detailedCtaList li {
+  position: relative;
+  padding-left: 18px;
+  color: rgba(253, 251, 246, .78);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.detailedCtaList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: .5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f6be10, #e62453);
+}
+
+.embedded.homeLayout .sidebarModeSwitchBtn {
+  text-decoration: none;
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .embedded.homeLayout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  .embedded.homeLayout .embeddedRail {
+    border-left: 0;
+    border-top: 1px solid rgba(253, 251, 246, .20);
+  }
+}
+
+/* The homepage band is a fixed-height surface, and step 01 lists seven property types.
+   Let the step content scroll inside its own row rather than being clipped by the band. */
+.embedded.homeLayout .embeddedLayout,
+.embedded.homeLayout .embeddedLeft {
+  min-height: 0;
+}
+
+.embedded.homeLayout .embeddedLeft .stepPanel {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(253, 251, 246, .28) transparent;
+}
+
+.embedded.homeLayout .embeddedLeft .stepPanel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.embedded.homeLayout .embeddedLeft .stepPanel::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(253, 251, 246, .28);
+}
+
+@media (max-width: 900px) {
+  /* Stacked layout scrolls with the page, so no inner scroll container. */
+  .embedded.homeLayout .embeddedLeft .stepPanel {
+    overflow-y: visible;
+    padding-right: 0;
+  }
+}
+
+/* Component-specific option groups (spec §4 doors, §6 railings). */
+.detailGroup {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.detailGroupTitle {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--yellow);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.detailSelect {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  appearance: none;
+}
+
+.detailSelect option {
+  color: #101a2e;
+  background: #fdfbf6;
+}
+
+/* =======================================================================
+   DAY / NIGHT THEME
+   The calculator surfaces are driven by tokens so both calculators share one
+   look. Day is the default; night engages on html[data-theme="amigos-dark"].
+   The same photograph backs both modes — day lifts and cools it behind a warm
+   cream wash, night keeps it rich behind a deep navy wash.
+   ======================================================================= */
+
+.page {
+  --surface: rgba(255, 255, 255, .72);
+  --surface-strong: rgba(255, 255, 255, .86);
+  --surface-hover: rgba(255, 255, 255, .94);
+  --ink: #10233c;
+  --ink-muted: rgba(16, 35, 60, .66);
+  --hairline: rgba(16, 35, 60, .14);
+  --ring: rgba(16, 35, 60, .10);
+  --scrim: linear-gradient(180deg, rgba(250, 247, 240, .93) 0%, rgba(250, 247, 240, .86) 45%, rgba(247, 241, 231, .90) 100%);
+  --photo-filter: brightness(1.85) saturate(.52) contrast(.92);
+  --accent-ink: #101a2e;
+  color: var(--ink);
+}
+
+:global(html[data-theme="amigos-dark"]) .page {
+  --surface: rgba(0, 19, 49, .52);
+  --surface-strong: rgba(0, 19, 49, .72);
+  --surface-hover: rgba(0, 19, 49, .82);
+  --ink: #fdfbf6;
+  --ink-muted: rgba(253, 251, 246, .68);
+  --hairline: rgba(253, 251, 246, .16);
+  --ring: rgba(253, 251, 246, .10);
+  --scrim: linear-gradient(180deg, rgba(7, 26, 51, .88) 0%, rgba(7, 26, 51, .72) 45%, rgba(4, 16, 34, .90) 100%);
+  --photo-filter: none;
+  --accent-ink: #101a2e;
+  color: var(--ink);
+}
+
+/* Shared photographic backdrop — the standalone calculator page now matches the
+   homepage block instead of using a flat gradient. */
+.page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url("/assets/calculator-glass-bg.png") center bottom / cover no-repeat;
+  filter: var(--photo-filter);
+  transition: filter .5s ease;
+}
+
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--scrim);
+  transition: background .5s ease;
+}
+
+/* the embedded block sits inside the homepage section, which paints its own backdrop */
+.embedded::after,
+.embedded::before {
+  position: absolute;
+}
+
+.embedded::after {
+  content: none;
+}
+
+/* ---- surfaces ---- */
+.heroCopy,
+.securityCard,
+.consultationShell,
+.embedded .heroCopy,
+.embedded .securityCard,
+.embedded .consultationShell {
+  border-color: var(--hairline);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 18px 48px var(--ring);
+}
+
+.embeddedRail {
+  border-color: var(--hairline) !important;
+  background: var(--surface);
+}
+
+.stepPanel h2,
+.resultLocked h2,
+.verifyPanel h2,
+.pricePanel h2,
+.heroCopy h1,
+.quickQuoteIntro h2 {
+  color: var(--ink);
+}
+
+.stepPanel p,
+.resultLocked p,
+.verifyPanel p,
+.pricePanel p,
+.heroCopy p,
+.quickQuoteIntro p,
+.heroCopy li,
+.detailedCtaList li,
+.securityCard p {
+  color: var(--ink-muted);
+}
+
+.selectionCard,
+.embedded .selectionCard {
+  border-color: var(--hairline);
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+
+.selectionCard:hover,
+.embedded .selectionCard:hover {
+  background: var(--surface-hover);
+}
+
+.quantityField,
+.notesField,
+.detailGroup {
+  border-color: var(--hairline);
+  color: var(--ink);
+}
+
+.quantityField input,
+.quantityField select,
+.notesField textarea,
+.detailSelect {
+  color: var(--ink);
+}
+
+.quantityField input::placeholder,
+.notesField textarea::placeholder {
+  color: var(--ink-muted);
+}
+
+.navActions {
+  border-color: var(--hairline);
+  background: var(--surface-strong);
+  box-shadow: 0 -10px 24px var(--ring), 0 16px 50px var(--ring);
+}
+
+.secondaryAction {
+  color: var(--ink);
+  border-color: var(--hairline);
+}
+
+.progressStep b {
+  color: var(--ink-muted);
+}
+
+.currentStep b {
+  color: var(--ink);
+}
+
+.detailSelect option {
+  color: #101a2e;
+  background: #fdfbf6;
+}
+
+/* ---- day/night toggle on the standalone calculator ---- */
+.themeToggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform .22s ease, background .22s ease;
+}
+
+.themeToggle:hover {
+  transform: translateY(-1px);
+  background: var(--surface-hover);
+}
+
+.themeToggle span {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ---- corrections on top of the theme layer ---- */
+
+/* The photograph is painted by .page itself; pseudo-elements sat behind the element's
+   own background and never showed. */
+.page {
+  background:
+    var(--scrim),
+    url("/assets/calculator-glass-bg.png") center bottom / cover no-repeat;
+  background-attachment: scroll, fixed;
+  transition: background .5s ease;
+}
+
+.page::before,
+.page::after {
+  content: none;
+}
+
+/* The homepage section paints its own backdrop, so the embedded block stays clear. */
+.embedded {
+  background: transparent;
+}
+
+/* The detailed flow has eight steps since Location was added; seven columns wrapped it. */
+.progressNav {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.progressNavSimple {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+/* Accent that stays legible on both cream and navy surfaces. */
+.page {
+  --accent: #b7893d;
+}
+
+:global(html[data-theme="amigos-dark"]) .page {
+  --accent: #f6be10;
+}
+
+.brand,
+.stepKicker,
+.detailGroupTitle,
+.sidebarModeKicker {
+  color: var(--accent);
+}
+
+/* Step content scrolls inside its row rather than being clipped by the action bar. */
+.embeddedLeft .stepPanel {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline) transparent;
+}
+
+.embeddedLeft .stepPanel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.embeddedLeft .stepPanel::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--hairline);
+}
+
+@media (max-width: 980px) {
+  .embeddedLeft .stepPanel {
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  .progressNav {
+    grid-template-columns: repeat(8, 118px);
+  }
+}
+
+/* =======================================================================
+   POLISH — contrast fixes, motion and interaction
+   ======================================================================= */
+
+/* These were hard-coded light-on-dark and vanished on the cream surfaces. */
+.heroCopy strong,
+.embedded .heroCopy strong {
+  color: var(--ink-muted);
+}
+
+.progressStep span,
+.embedded .progressStep span {
+  color: var(--ink-muted);
+}
+
+.currentStep span,
+.embedded .currentStep span {
+  color: var(--accent);
+}
+
+/* Soften the decorative tint so it reads as a wash, not a colour cast. */
+.heroCopy::before,
+.embedded .heroCopy::before {
+  opacity: .35;
+}
+
+/* Let step content scroll clear of the floating action bar. */
+.embeddedLeft .stepPanel {
+  padding-bottom: 84px;
+}
+
+/* ---- property / service cards ---- */
+.selectionCard {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform .32s cubic-bezier(.16, 1, .3, 1),
+    box-shadow .32s ease,
+    border-color .24s ease,
+    background .24s ease;
+}
+
+.selectionCard :global(img),
+.selectionCard i {
+  transition: transform .5s cubic-bezier(.16, 1, .3, 1);
+}
+
+.selectionCard:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 18px 40px var(--ring);
+}
+
+.selectionCard:hover :global(img),
+.selectionCard:hover i {
+  transform: scale(1.06);
+}
+
+.selectionCard:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* selected state: accent ring plus a check that draws itself in */
+.selectedCard {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent), 0 16px 38px var(--ring) !important;
+}
+
+.selectedCard::after {
+  content: "✓";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f6be10, #f39125);
+  color: #101a2e;
+  font-size: 13px;
+  font-weight: 900;
+  animation: cardCheckIn .38s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes cardCheckIn {
+  from { opacity: 0; transform: scale(.4) rotate(-25deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+/* ---- step transitions ---- */
+.stepPanel,
+.resultLocked,
+.verifyPanel,
+.pricePanel {
+  animation: stepIn .42s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- current step marker ---- */
+.currentStep i {
+  animation: stepPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes stepPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(246, 190, 16, .42); }
+  50%      { box-shadow: 0 0 0 8px rgba(246, 190, 16, 0); }
+}
+
+/* ---- inputs & actions ---- */
+.quantityField,
+.notesField,
+.detailGroup {
+  transition: border-color .24s ease, background .24s ease;
+}
+
+.quantityField:focus-within,
+.notesField:focus-within {
+  border-color: var(--accent);
+}
+
+.primaryAction {
+  transition: transform .24s ease, box-shadow .24s ease, filter .24s ease;
+}
+
+.primaryAction:not(:disabled):hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow: 0 14px 30px var(--ring);
+}
+
+.primaryAction:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform .24s ease, border-color .24s ease, background .24s ease;
+}
+
+.secondaryAction:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+
+.detailSelect:focus-visible,
+.quantityField input:focus-visible,
+.notesField textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepPanel,
+  .resultLocked,
+  .verifyPanel,
+  .pricePanel,
+  .selectedCard::after,
+  .currentStep i {
+    animation: none;
+  }
+
+  .selectionCard,
+  .selectionCard :global(img),
+  .primaryAction,
+  .secondaryAction {
+    transition: none;
+  }
+}
+
+/* The .embedded-prefixed rules out-specify the single-class theme rules above, so the
+   themed text colours have to be restated at the same specificity. */
+.embedded .securityCard h2,
+.embedded .sidebarModeTitle,
+.embedded .stepPanel h2,
+.embedded .resultLocked h2,
+.embedded .verifyPanel h2,
+.embedded .pricePanel h2,
+.embedded .quickQuoteIntro h2,
+.embedded .heroCopy h1,
+.sidebarModeTitle {
+  color: var(--ink);
+}
+
+.embedded .securityCard p,
+.embedded .sidebarModeDesc,
+.embedded .stepPanel p,
+.embedded .resultLocked p,
+.embedded .verifyPanel p,
+.embedded .pricePanel p,
+.embedded .quickQuoteIntro p,
+.embedded .heroCopy p,
+.embedded .heroCopy li,
+.embedded .detailedCtaList li,
+.embedded .progressStep b,
+.sidebarModeDesc {
+  color: var(--ink-muted);
+}
+
+.embedded .currentStep b,
+.embedded .doneStep b {
+  color: var(--ink);
+}
+
+.embedded .brand,
+.embedded .stepKicker,
+.embedded .sidebarModeKicker,
+.embedded .detailGroupTitle,
+.embedded .currentStep span {
+  color: var(--accent);
+}
+
+.embedded .securityCard,
+.embedded .sidebarModeCard {
+  border-color: var(--hairline);
+  background: var(--surface);
+}
+
+.embedded .quantityField,
+.embedded .notesField,
+.embedded .quantityField input,
+.embedded .notesField textarea,
+.embedded .detailSelect {
+  color: var(--ink);
+  border-color: var(--hairline);
+}
+
+/* The rail is mostly empty at 30% width; pull its cards to the top. */
+.embedded.homeLayout .embeddedRail {
+  align-content: start;
+  gap: 16px;
+}
+
+/* =======================================================================
+   BACKDROP + PANEL STRUCTURE (revision)
+
+   Two corrections:
+   1. Day mode now uses the daytime photograph of the same house rather than the
+      night shot behind a heavy cream wash, which had washed it out to nothing.
+   2. The rail and the consultation shell were given solid surfaces by the theme
+      layer above, which turned each column into a visible box with dead space at
+      its top and bottom. In the embedded (homepage) layout the columns are
+      transparent again — only the actual cards are surfaces.
+   ======================================================================= */
+
+.page {
+  --photo: url("/assets/calculator-day-bg.webp");
+  /* a light veil, not an opaque wash — the photograph should stay legible */
+  --scrim: linear-gradient(180deg, rgba(250, 247, 240, .58) 0%, rgba(250, 247, 240, .40) 42%, rgba(247, 241, 231, .62) 100%);
+}
+
+:global(html[data-theme="amigos-dark"]) .page {
+  --photo: url("/assets/calculator-glass-bg.png");
+  --scrim: linear-gradient(180deg, rgba(7, 26, 51, .82) 0%, rgba(7, 26, 51, .66) 42%, rgba(4, 16, 34, .86) 100%);
+}
+
+.page {
+  background: var(--scrim), var(--photo) center bottom / cover no-repeat;
+  background-attachment: scroll, fixed;
+}
+
+/* ---- columns carry no box of their own ---- */
+.embedded,
+.embedded .consultationShell,
+.embedded .embeddedRail,
+.embedded .embeddedLeft,
+.embedded .embeddedRight {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* a single hairline keeps the two columns related without drawing a box */
+.embedded.homeLayout .embeddedRail {
+  border-left: 1px solid var(--hairline) !important;
+  padding-left: clamp(18px, 2vw, 30px);
+}
+
+@media (max-width: 900px) {
+  .embedded.homeLayout .embeddedRail {
+    border-left: 0 !important;
+    border-top: 1px solid var(--hairline) !important;
+    padding-left: 0;
+    padding-top: 22px;
+  }
+}
+
+/* ---- the cards are the surfaces ---- */
+.embedded .sidebarModeCard,
+.embedded .securityCard {
+  padding: 18px 20px !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: 18px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 14px 34px var(--ring) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+
+.embedded .securityCard {
+  min-height: 0 !important;
+}
+
+/* the rail sized itself to the full column height, leaving a large void below the
+   two cards — let it hug its content instead */
+.embedded.homeLayout .embeddedRail {
+  align-content: start;
+  align-self: start;
+  gap: 14px;
+}
+
+/* The divider only spanned the rail's own height once the rail hugged its content,
+   which read as a half-drawn line. Spacing alone separates the two columns. */
+.embedded.homeLayout .embeddedRail {
+  border-left: 0 !important;
+  border-top: 0 !important;
+}
+
+@media (max-width: 900px) {
+  /* stacked: a hairline is useful here because the columns sit one above the other */
+  .embedded.homeLayout .embeddedRail {
+    border-top: 1px solid var(--hairline) !important;
+  }
+}
+
+/* =======================================================================
+   STANDALONE PAGE — same structure as the homepage block
+
+   The consultation shell was a full-height box, so the step content sat in a
+   container that stretched well past it and left a large empty area above the
+   action bar. The shell is a layout column, not content: it carries no surface.
+   The hero and security cards keep their surfaces but gain breathing room.
+   ======================================================================= */
+
+.page > .consultationShell,
+.consultationShell {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* content hugs the top instead of being centred in a tall empty column */
+.page .stepPanel,
+.page .resultLocked,
+.page .verifyPanel,
+.page .pricePanel {
+  align-self: start;
+}
+
+/* ---- the two header cards ---- */
+.page > .hero > .heroCopy,
+.page > .hero > .securityCard {
+  padding: clamp(20px, 2.2vw, 30px) clamp(22px, 2.6vw, 34px);
+  border: 1px solid var(--hairline);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 16px 40px var(--ring);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.page > .hero > .heroCopy h1 {
+  margin-bottom: 6px;
+}
+
+.page > .hero > .heroCopy ul {
+  margin-top: 12px;
+  gap: 6px;
+}
+
+.page > .hero > .securityCard {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+/* the hero row shouldn't stretch the cards to matching full height */
+.page > .hero {
+  align-items: start;
+  gap: clamp(14px, 1.6vw, 22px);
+}
+
+/* The card icon was a near-white chip on a near-white surface in day mode. Give it the
+   brand gradient so it reads as an icon in both themes, and make the card surface solid
+   enough that the photograph behind does not show through unevenly. */
+.cardIcon,
+.embedded .cardIcon {
+  background: linear-gradient(135deg, var(--yellow), var(--orange), var(--magenta));
+  color: #fdfbf6;
+}
+
+.selectionCard,
+.embedded .selectionCard {
+  background: var(--card-surface);
+}
+
+.selectionCard:hover,
+.embedded .selectionCard:hover {
+  background: var(--card-surface-hover);
+}
+
+.page {
+  --card-surface: rgba(255, 255, 255, .93);
+  --card-surface-hover: #ffffff;
+}
+
+:global(html[data-theme="amigos-dark"]) .page {
+  --card-surface: rgba(0, 19, 49, .62);
+  --card-surface-hover: rgba(0, 19, 49, .78);
+}
+
+/* =======================================================================
+   ART DIRECTION PASS
+   Same design language, composed on a consistent scale. One spacing ramp and
+   one type ramp drive every screen so the three steps read as one product.
+   ======================================================================= */
+
+.page {
+  /* spacing ramp */
+  --s1: 6px;
+  --s2: 10px;
+  --s3: 16px;
+  --s4: 22px;
+  --s5: 30px;
+  --s6: 42px;
+
+  /* type ramp — a step up from the original, deliberately short of display sizes */
+  --t-kicker: 12px;
+  --t-micro: 12px;
+  --t-body: 14px;
+  --t-card: 15px;
+  --t-card-sub: 12.5px;
+  --t-panel-title: 20px;
+  --t-h2: clamp(27px, 2.25vw, 38px);
+  --t-hero: clamp(30px, 2.6vw, 42px);
+}
+
+/* ---------- 1. TYPOGRAPHY ---------- */
+
+.embedded .stepKicker,
+.stepKicker {
+  font-size: var(--t-kicker);
+  font-weight: 800;
+  letter-spacing: .15em;
+}
+
+.embedded .stepPanel h2,
+.page .stepPanel h2 {
+  margin: var(--s2) 0 var(--s1);
+  font-size: var(--t-h2);
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -.015em;
+}
+
+.embedded .stepPanel > p,
+.page .stepPanel > p {
+  max-width: 62ch;
+  font-size: var(--t-body);
+  line-height: 1.55;
+}
+
+.embedded .quickQuoteIntro h2 {
+  font-size: var(--t-hero);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.015em;
+}
+
+.embedded .quickQuoteIntro p {
+  max-width: 58ch;
+  font-size: var(--t-body);
+  line-height: 1.5;
+}
+
+/* ---------- 2. COMPOSITION ---------- */
+
+/* the right column carries real weight rather than being leftover space */
+.embedded.homeLayout {
+  grid-template-columns: minmax(0, 1.85fr) minmax(320px, 1fr);
+  gap: clamp(24px, 2.6vw, 46px);
+}
+
+.embedded.homeLayout .embeddedWorkspace {
+  padding: var(--s5) 0 var(--s3) clamp(20px, 2.4vw, 44px);
+  gap: var(--s4);
+}
+
+.embedded.homeLayout .embeddedRail {
+  padding: var(--s5) clamp(20px, 2.4vw, 40px) var(--s3) 0;
+  gap: var(--s3);
+}
+
+/* ---------- 3. DETAILED QUOTE PANEL ---------- */
+
+.embedded .sidebarModeCard {
+  padding: var(--s5) var(--s4) var(--s4) !important;
+  border: 1px solid var(--panel-edge) !important;
+  border-radius: 20px !important;
+  background: var(--panel-bg) !important;
+  box-shadow: 0 22px 52px var(--ring) !important;
+}
+
+.page {
+  --panel-edge: rgba(183, 137, 61, .38);
+  --panel-bg: linear-gradient(165deg, rgba(255, 255, 255, .94), rgba(255, 255, 255, .82));
+}
+
+:global(html[data-theme="amigos-dark"]) .page {
+  --panel-edge: rgba(246, 190, 16, .30);
+  --panel-bg: linear-gradient(165deg, rgba(0, 24, 60, .78), rgba(0, 16, 42, .68));
+}
+
+.embedded .sidebarModeKicker {
+  display: block;
+  margin-bottom: var(--s2);
+  font-size: var(--t-kicker);
+  letter-spacing: .14em;
+}
+
+.embedded .sidebarModeTitle {
+  margin: 0 0 var(--s3);
+  font-size: var(--t-panel-title);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+}
+
+.detailedCtaList {
+  margin: 0 0 var(--s4);
+  gap: var(--s2);
+}
+
+.detailedCtaList li {
+  padding-left: 20px;
+  font-size: var(--t-body);
+  line-height: 1.45;
+}
+
+/* the CTA is the conversion point on this side of the page */
+.embedded.homeLayout .sidebarModeSwitchBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  width: 100%;
+  min-height: 50px;
+  padding: 0 var(--s4);
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f6be10, #f39125);
+  color: #101a2e;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  box-shadow: 0 14px 30px rgba(246, 190, 16, .26);
+  transition: transform .24s ease, box-shadow .24s ease, filter .24s ease;
+}
+
+.embedded.homeLayout .sidebarModeSwitchBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 18px 38px rgba(246, 190, 16, .34);
+}
+
+.embedded.homeLayout .sidebarModeSwitchBtn i {
+  font-style: normal;
+  font-size: 15px;
+}
+
+/* the pricing card is a quieter note beneath the panel, not a peer */
+.embedded.homeLayout .securityCard {
+  padding: var(--s4) !important;
+  border-radius: 16px !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+}
+
+.embedded.homeLayout .securityCard h2 {
+  font-size: 13px;
+  letter-spacing: .1em;
+}
+
+.embedded.homeLayout .securityCard p {
+  font-size: var(--t-micro);
+  line-height: 1.45;
+}
+
+/* ---------- 4. SELECTED STATE ---------- */
+
+.selectedCard,
+.embedded .selectedCard {
+  border-color: var(--accent) !important;
+  background: var(--card-surface-hover) !important;
+  /* a clean edge, not a halo */
+  box-shadow: inset 0 0 0 1px var(--accent), 0 10px 26px var(--ring) !important;
+}
+
+.selectedCard::after {
+  top: 12px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+/* ---------- 5. CARDS ---------- */
+
+.embedded .cardGrid,
+.page .cardGrid {
+  gap: var(--s3);
+}
+
+.embedded .selectionCard,
+.page .selectionCard {
+  padding: var(--s3);
+  border-radius: 16px;
+}
+
+.embedded .selectionCard span:not(.cardIcon),
+.page .selectionCard span:not(.cardIcon) {
+  font-size: var(--t-card);
+}
+
+.cardIcon,
+.embedded .cardIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+}
+
+.scopeCardGrid {
+  gap: var(--s3);
+}
+
+.scopeCard {
+  border-radius: 18px;
+}
+
+/* ---------- 6. PROGRESS TRACKER ---------- */
+
+.embedded .progressNav {
+  margin-bottom: var(--s1);
+  padding-bottom: var(--s2);
+}
+
+.embedded .progressStep span {
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+
+.embedded .progressStep i {
+  width: 44px;
+  height: 44px;
+}
+
+.embedded .progressStep b {
+  font-size: 12.5px;
+  letter-spacing: .01em;
+}
+
+/* ---------- 10. SPACING RHYTHM ---------- */
+
+.embedded .stepPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.embedded .stepPanel .cardGrid,
+.embedded .stepPanel .scopeCardGrid,
+.embedded .stepPanel .serviceGrid,
+.embedded .stepPanel .quantityGrid {
+  margin-top: var(--s4);
+}
+
+.roomChips {
+  gap: var(--s1);
+}
+
+.roomChips button {
+  min-width: 40px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+/* =======================================================================
+   ART DIRECTION PASS — PART 2
+   Part 1 composed the embedded quick calculator. This part carries the same
+   ramps onto the full-page detailed calculator and unifies the pieces both
+   flows share, so the two calculators read as one product across all three
+   screens (Project Type / Scope & Work / Components).
+   ======================================================================= */
+
+/* ---------- 11. ONE MEASURE, ONE SET OF VERTICAL GUIDES ---------- */
+
+/* Every band on the detailed page hangs off the same rail. The old 1240px
+   measure left the photograph doing the work at the edges on wide screens. */
+.page {
+  --measure: min(1420px, 100%);
+}
+
+.page:not(.embedded) > .hero,
+.page:not(.embedded) > .progressNav,
+.page:not(.embedded) > .consultationShell {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+/* the shell's own inset matches the hero cards' so headings, cards and the
+   action bar all start on the same vertical line */
+.page:not(.embedded) > .consultationShell {
+  padding-inline: clamp(2px, 0.5vw, 8px);
+}
+
+/* ---------- 7. RIGHT-SIDE BALANCE (detailed page header) ---------- */
+
+/* The protected-pricing aside was a narrow offcut beside a wide copy block.
+   Give it enough width to read as the second half of a deliberate pair. */
+.page:not(.embedded) > .hero {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, .42fr);
+  gap: clamp(14px, 1.8vw, 24px);
+}
+
+/* ---------- 1. TYPOGRAPHY ON THE DETAILED PAGE ---------- */
+
+.page:not(.embedded) .heroCopy h1 {
+  font-size: var(--t-hero);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.015em;
+}
+
+.page:not(.embedded) .heroCopy p {
+  max-width: 62ch;
+  font-size: var(--t-body);
+  line-height: 1.5;
+}
+
+.page:not(.embedded) .heroCopy li {
+  font-size: var(--t-body);
+  line-height: 1.45;
+}
+
+.page:not(.embedded) .securityCard h2 {
+  font-size: var(--t-panel-title);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+}
+
+.page:not(.embedded) .securityCard p {
+  font-size: var(--t-body);
+  line-height: 1.5;
+}
+
+/* ---------- 6. PROGRESS TRACKER — IDENTICAL IN BOTH CALCULATORS ---------- */
+
+.page .progressStep i {
+  width: 44px;
+  height: 44px;
+}
+
+.page .progressStep span {
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+
+.page .progressStep b {
+  font-size: 12.5px;
+  letter-spacing: .01em;
+}
+
+/* the connector rail follows the larger step markers */
+.page:not(.embedded) .progressNav::before,
+.page:not(.embedded) .progressFill {
+  top: 42px;
+}
+
+/* ---------- 4. SELECTION LANGUAGE — ONE TREATMENT, ALL THREE SCREENS ---------- */
+
+/* Project Type, Scope & Work and Components each had their own selected state,
+   all three a 2px gold rule plus a 20px halo and an inset bloom. Same language,
+   stated once and quietly: a clean gold edge, a little more contrast, no glow.
+   These three card types carry their own navy surface in both themes, so the
+   lift stays inside that idiom rather than borrowing the page surface token —
+   --card-surface-hover is white in day mode and would erase the card's text. */
+.propertyCardSelected,
+.scopeCardSelected,
+.conditionCardSelected {
+  border: 1px solid #fabe2c !important;
+  background: rgba(14, 32, 60, .92) !important;
+  box-shadow: inset 0 0 0 1px #fabe2c, 0 10px 26px rgba(0, 0, 0, .30) !important;
+}
+
+/* the checkmark is the signal that reads first — keep it crisp, not heavy */
+.propertyCardBadge {
+  top: 12px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  background: linear-gradient(135deg, var(--yellow), var(--orange));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+}
+
+/* hover is an invitation, not a second selected state */
+.propertyCard:hover,
+.scopeCard:hover,
+.conditionCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(250, 190, 44, .55);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .32);
+}
+
+/* active room count / room size chips follow the same restraint */
+.activeChip {
+  box-shadow: 0 6px 16px rgba(246, 190, 16, .22) !important;
+}
+
+/* ---------- 5. SCOPE & CONDITION CARD PROPORTIONS ---------- */
+
+/* Titles sat at 13px and descriptions at 11px — a step below the rest of the
+   ramp, which is what made the group feel like a footnote. */
+.scopeCard {
+  padding: var(--s4) var(--s3);
+  gap: 2px;
+}
+
+.scopeCardIcon {
+  width: 46px;
+  height: 46px;
+  margin-bottom: var(--s2);
+}
+
+.scopeCardIcon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.scopeCardTitle,
+.conditionCardTitle {
+  margin-bottom: 4px;
+  font-size: var(--t-card);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.scopeCardDesc,
+.conditionCardDesc {
+  font-size: var(--t-card-sub);
+  line-height: 1.4;
+}
+
+.conditionCard {
+  padding: var(--s3);
+  gap: var(--s3);
+  border-radius: 18px;
+}
+
+.conditionCardIcon {
+  width: 44px;
+  height: 44px;
+}
+
+.conditionCardIcon svg {
+  width: 36px;
+  height: 36px;
+}
+
+/* ---------- 12. THE THREE SCREENS SHARE ONE RHYTHM ---------- */
+
+/* Screen 1 used a 16px gap and a 20px lead-in, screens 2 and 3 used 12px and
+   14px. Same ramp on all of them so stepping through feels like one product. */
+.propertyGrid,
+.scopeCardGrid,
+.conditionCardGrid,
+.page .cardGrid,
+.page .serviceGrid,
+.page .quantityGrid {
+  gap: var(--s3);
+  margin-top: var(--s4);
+}
+
+.propertyCardMedia {
+  height: clamp(118px, 10.5vw, 148px);
+}
+
+/* the detailed flow's own panels inherit the embedded flow's rhythm */
+.page:not(.embedded) .stepPanel .cardGrid,
+.page:not(.embedded) .stepPanel .scopeCardGrid,
+.page:not(.embedded) .stepPanel .conditionCardGrid,
+.page:not(.embedded) .stepPanel .propertyGrid,
+.page:not(.embedded) .stepPanel .serviceGrid,
+.page:not(.embedded) .stepPanel .quantityGrid {
+  margin-top: var(--s4);
+}
+
+/* room controls are a sub-group of the cards above them, not a new section */
+.page .roomChips {
+  margin-top: var(--s3);
+}
+
+/* ---------- 10. SPACING — CLOSE THE GAPS THAT READ AS ACCIDENTS ---------- */
+
+.page:not(.embedded) {
+  gap: var(--s2);
+}
+
+.page:not(.embedded) > .progressNav {
+  padding: var(--s3) var(--s2) var(--s2);
+}
+
+.page:not(.embedded) .stepPanel {
+  padding-top: var(--s1);
+}
+
+/* =======================================================================
+   ART DIRECTION PASS — PART 4
+   Screen 1's project-type cards were missed when screens 2 and 3 moved onto the
+   type ramp, so the first screen still read a size smaller than the two after
+   it. This settles the imagery treatment across all three.
+   ======================================================================= */
+
+/* 18px is the site's dominant card radius (about/services/projects all use it),
+   and it is what the scope and condition cards were moved to. The project-type
+   cards were still at 12px, which is why their photos read as a different kind
+   of card from everything else on the page. */
+.propertyCard {
+  border-radius: 18px;
+}
+
+.propertyCardTitle {
+  font-size: var(--t-card);
+  line-height: 1.25;
+}
+
+.propertyCardSubtitle {
+  font-size: var(--t-card-sub);
+  line-height: 1.4;
+}
+
+.propertyCardInfo {
+  gap: 2px;
+  padding: var(--s2) var(--s3) calc(var(--s2) + 2px);
+}
+
+/* the photo is the card's subject — give it a little more of the card */
+.propertyCardFallbackGraphic svg {
+  width: 46px;
+  height: 46px;
+}
+
+/* =======================================================================
+   ART DIRECTION PASS — PART 5
+   themeFont ships as a single face (n.woff2, no weight descriptor), so every
+   weight above it is synthesised by the browser. The calculator was drawn for
+   SpartanMB, which has seven real weights, and leans on 900 in eleven places —
+   heavier than anything the site itself uses, where 700 is the ceiling. Capping
+   the top tier keeps the hierarchy coming from size and colour instead of from
+   a faux-bold that only gets blurrier. Revert this block if the CTAs read light.
+   ======================================================================= */
+
+.page .stepPanel h2,
+.page .quickQuoteIntro h2,
+.page .heroCopy h1,
+.page .securityCard h2,
+.page .sidebarModeTitle,
+.page .resultLocked h2,
+.page .verifyPanel h2,
+.page .pricePanel h2 {
+  font-weight: 700;
+}
+
+.page .primaryAction,
+.page .sidebarModeSwitchBtn,
+.page .stepKicker,
+.page .brand,
+.page .sidebarModeKicker,
+.page .progressStep span,
+.page .lockedPrice strong,
+.page .propertyCardBadge {
+  font-weight: 800;
+}
+
+/* ---------- TYPEFACE — ONE VOICE WITH THE REST OF THE SITE ---------- */
+
+/* The calculator shipped with SpartanMB while every other page uses themeFont.
+   Kept from the earlier pass: both flows follow the site typeface even though
+   the detailed flow is its own app frame. Browsers do not inherit font into
+   form controls, so those are named explicitly. */
+.page,
+.page :global(input),
+.page :global(select),
+.page :global(textarea),
+.page :global(button) {
+  font-family: "themeFont", "offerCalculatorFont", sans-serif;
+}
+
+/* =======================================================================
+   ART DIRECTION PASS — PART 6
+   The detailed calculator stays an app frame. This part balances it inside one
+   viewport: the chrome gives its height back to the working area, the action
+   row stops floating across the full width, and the day/night control is the
+   same switch the site header uses.
+   ======================================================================= */
+
+/* ---------- DAY / NIGHT — THE HOMEPAGE SWITCH ---------- */
+
+/* Was a pill reading "☾ NIGHT". It is now the header's 48×32 switch with a
+   sliding knob, so the control is the same object in both places. */
+.themeToggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  width: 48px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  min-height: 0;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background .28s ease, border-color .28s ease, transform .28s ease;
+}
+
+.themeToggle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, .68);
+  background: rgba(255, 255, 255, .20);
+}
+
+.themeToggleIcon {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f6be10, #f39125 58%, #fff3bf);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .22);
+  transition: transform .32s ease, background .32s ease, color .32s ease;
+}
+
+.themeIcon {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+:global(html[data-theme="amigos-dark"]) .themeToggle {
+  border-color: rgba(246, 190, 16, .54);
+  background: rgba(7, 26, 51, .72);
+}
+
+:global(html[data-theme="amigos-dark"]) .themeToggleIcon {
+  transform: translateX(16px);
+  background: linear-gradient(135deg, #071A33, #12345f 58%, #c73b8e);
+  color: #fdfbf6;
+}
+
+/* ---------- THE ACTION ROW BELONGS TO THE FRAME ---------- */
+
+/* It was position:fixed and stretched the full width of the window, so BACK and
+   CALCULATE sat at opposite ends of a long empty pill floating over the content.
+   The shell already reserves a final grid row for it — put it back there and
+   group the two buttons together, the way a wizard footer reads. */
+.page:not(.embedded) .navActions {
+  position: static;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  justify-content: flex-end;
+  gap: var(--s2);
+  margin: 0;
+  padding: var(--s3) 0 var(--s1);
+  border: 0;
+  border-top: 1px solid var(--hairline);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* margin-left:auto was what pushed the primary button to the far edge */
+.page:not(.embedded) .navActions .primaryAction {
+  margin-left: 0;
+}
+
+/* the step panel no longer has to reserve room for a floating bar */
+.page:not(.embedded) .stepPanel {
+  padding-bottom: var(--s2);
+}
+
+/* ---------- HEIGHT BACK TO THE WORKING AREA ---------- */
+
+/* Every pixel the chrome gives up is a pixel the step content does not have to
+   scroll for. The type ramp is untouched; only the padding around it moves. */
+.page:not(.embedded) {
+  gap: var(--s2);
+  padding-block: var(--s2);
+}
+
+.page:not(.embedded) > .hero {
+  gap: var(--s2);
+}
+
+.page:not(.embedded) .heroCopy {
+  min-height: 0;
+  padding: var(--s3) var(--s4);
+}
+
+/* the frame's one oversized element — trimmed so the tracker and the step
+   content sit higher without touching the step headings themselves */
+.page:not(.embedded) .heroCopy h1 {
+  font-size: clamp(24px, 2.1vw, 32px);
+  margin-bottom: 4px;
+}
+
+.page:not(.embedded) .heroCopy ul {
+  margin-top: var(--s2);
+  gap: 4px;
+}
+
+.page:not(.embedded) .securityCard {
+  padding: var(--s3) var(--s4);
+}
+
+.page:not(.embedded) > .progressNav {
+  padding: var(--s2) var(--s2) var(--s1);
+}
+
+.page:not(.embedded) > .consultationShell {
+  padding-block: 0;
+}
+
+/* =======================================================================
+   ART DIRECTION PASS — PART 7
+   The two cards at the top of the app frame. Both are in the full-page flow
+   only — the embedded flow uses the rail instead, so these selectors do not
+   reach it.
+   ======================================================================= */
+
+/* ---------- THE PAIR READS AS A PAIR ---------- */
+
+/* The boxes were sized to their own content and the right one centred its text
+   while the left one hung from the top, so the two headings never landed on the
+   same line. Equal height, both top-aligned, one shared padding. */
+.page > .hero {
+  align-items: stretch;
+}
+
+.page > .hero > .heroCopy,
+.page > .hero > .securityCard {
+  align-content: start;
+  min-height: 0;
+  padding: var(--s4);
+}
+
+/* ---------- "CREATE A DETAILED QUOTE" LEAD LINE ---------- */
+
+/* The three bullets were replaced by a single sentence. It is the only body
+   copy in the card now, so it gets the readable body size rather than the
+   11px the bullet row used, and a measure that keeps it to one or two lines. */
+.page > .hero > .heroCopy p {
+  max-width: 78ch;
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: 1.5;
+}
+
+/* ---------- "PRICES ARE PROTECTED" ---------- */
+
+/* The lock sat on its own line above the heading, which left a gap across the
+   card and pushed the copy down. Icon and heading now share the top row and the
+   sentence spans beneath them. */
+.page > .hero > .securityCard {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s2) var(--s3);
+}
+
+.page > .hero > .securityCard span {
+  grid-area: 1 / 1;
+  align-self: center;
+  margin-bottom: 0;
+}
+
+.page > .hero > .securityCard h2 {
+  grid-area: 1 / 2;
+  align-self: center;
+  margin: 0;
+}
+
+.page > .hero > .securityCard p {
+  grid-area: 2 / 1 / 3 / -1;
+  margin: 0;
+}
+
+/* =======================================================================
+   ART DIRECTION PASS — PART 9
+   The project-type cards, the step tracker's internal spacing, and the step
+   heading's weight in the layout.
+   ======================================================================= */
+
+/* ---------- PROJECT TYPE CARDS — PHOTO, NOT PHOTO PLUS A BOX ---------- */
+
+/* Each card was a picture with a solid navy bar bolted underneath carrying the
+   title. The bar is gone: the photograph now fills the card and the caption
+   sits on a gradient that fades out of the image itself, so there is no second
+   rectangle and no hard edge across the card. */
+.propertyCard {
+  display: block;
+}
+
+.propertyCardMedia {
+  height: clamp(152px, 14.5vw, 208px);
+}
+
+.propertyCardInfo {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 2;
+  gap: 2px;
+  padding: var(--s5) var(--s3) var(--s3);
+  background: linear-gradient(
+    to top,
+    rgba(4, 14, 32, .94) 10%,
+    rgba(4, 14, 32, .68) 52%,
+    rgba(4, 14, 32, 0) 100%
+  );
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ---------- STEP TRACKER — LET THE THREE LINES BREATHE ---------- */
+
+/* Number, marker and label were 2px and 6px apart, which read as one crowded
+   clump. The rail behind the markers is positioned off the same numbers, so it
+   is recalculated here rather than left where it was:
+   14 (nav padding) + 12 (number) + 8 (gap) = 34 to the marker top, + 22 = 56 to
+   its centre, so a 2px rail sits at 55. */
+.page:not(.embedded) > .progressNav {
+  padding-top: 14px;
+}
+
+.page:not(.embedded) .progressStep {
+  min-height: 116px;
+}
+
+.page:not(.embedded) .progressStep span {
+  margin-bottom: 8px;
+}
+
+.page:not(.embedded) .progressStep i {
+  margin: 0 0 12px;
+}
+
+.page:not(.embedded) .progressNav::before,
+.page:not(.embedded) .progressFill {
+  top: 55px;
+}
+
+/* ---------- THE STEP HEADING CARRIES THE SCREEN ---------- */
+
+/* A step up, and more air before the cards, so the question reads first and the
+   images sit under it rather than crowding it. */
+.page {
+  --t-h2: clamp(34px, 2.9vw, 48px);
+}
+
+.page:not(.embedded) .stepPanel .propertyGrid,
+.page:not(.embedded) .stepPanel .scopeCardGrid,
+.page:not(.embedded) .stepPanel .conditionCardGrid,
+.page:not(.embedded) .stepPanel .cardGrid,
+.page:not(.embedded) .stepPanel .serviceGrid {
+  margin-top: var(--s6);
+}
+
+/* =======================================================================
+   ART DIRECTION PASS — PART 10
+   The content-heavy steps. Everything on a step should sit inside the frame,
+   so the dense grids get more columns (fewer rows) and the controls come down
+   to a size that matches the enlarged step heading rather than fighting it.
+   ======================================================================= */
+
+/* ---------- COMPONENTS / WORK & SERVICES ---------- */
+
+/* Two and three fixed columns meant tall stacks of rows. Filling the rail with
+   as many columns as it holds turns the same list into two or three rows.
+   The service list also carried its own max-height:min(42vh,310px) scroller,
+   which put a second scrollbar inside the step panel's own — it now uses the
+   height the panel already gives it. */
+.page:not(.embedded) .cardGrid {
+  grid-template-columns: repeat(auto-fill, minmax(186px, 1fr));
+}
+
+.page:not(.embedded) .serviceGrid {
+  grid-template-columns: repeat(auto-fill, minmax(226px, 1fr));
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
+
+.page:not(.embedded) .selectionCard {
+  min-height: 58px;
+  padding: var(--s2) 34px var(--s2) var(--s3);
+}
+
+/* ---------- QUANTITIES ---------- */
+
+.page:not(.embedded) .quantityGrid,
+.page:not(.embedded) .customerGrid {
+  grid-template-columns: repeat(auto-fill, minmax(206px, 1fr));
+}
+
+.page:not(.embedded) .quantityField input,
+.page:not(.embedded) .emailField input,
+.page:not(.embedded) .customerGrid input {
+  min-height: 40px;
+  padding: 9px 13px;
+}
+
+.page:not(.embedded) .notesField textarea {
+  min-height: 66px;
+}
+
+/* ---------- VERIFY E-MAIL ---------- */
+
+.page:not(.embedded) .codeInputs input {
+  width: 46px;
+  height: 50px;
+  font-size: 20px;
+}
+
+/* ---------- SUMMARY / ESTIMATE / PRICE ---------- */
+
+/* The three result panels were washed with a gold radial at 80% 18% and a
+   magenta one at 10% 90%. That tint is the colour on the estimate step; it
+   goes, leaving the same neutral surface the rest of the frame uses. */
+.page:not(.embedded) .resultLocked,
+.page:not(.embedded) .verifyPanel,
+.page:not(.embedded) .pricePanel {
+  gap: var(--s2);
+  padding: var(--s3);
+  background: var(--surface);
+}
+
+.page:not(.embedded) .lockedPrice {
+  padding: var(--s3);
+}
+
+/* it ran to 56px, which pushed the actions under it out of the frame */
+.page:not(.embedded) .lockedPrice strong,
+.page:not(.embedded) .priceRange {
+  font-size: clamp(28px, 2.8vw, 40px);
+}
+
+/* =======================================================================
+   ART DIRECTION PASS — PART 12
+   The three result panels (Summary, Verify E-Mail, Price) are .resultLocked /
+   .verifyPanel / .pricePanel. They stack as flex columns and carry their own
+   spacing ramp, since the inline margins that used to space them were removed
+   from the markup. They scroll when their content is taller than the frame.
+   ======================================================================= */
+
+.page:not(.embedded) .resultLocked,
+.page:not(.embedded) .verifyPanel,
+.page:not(.embedded) .pricePanel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--s2);
+}
+
+/* the contact grid keeps its fields hanging from the top of the panel rather
+   than stretching to fill it */
+.page:not(.embedded) .resultLocked > .customerGrid,
+.page:not(.embedded) .verifyPanel > .customerGrid {
+  align-content: start;
+  margin-top: var(--s2);
+}
+
+.page:not(.embedded) .resultLocked > .primaryAction,
+.page:not(.embedded) .verifyPanel > .primaryAction,
+.page:not(.embedded) .pricePanel > .primaryAction {
+  align-self: flex-start;
+  margin-top: var(--s2);
+}
+
+.page:not(.embedded) .emailField,
+.page:not(.embedded) .checkboxLine {
+  margin-top: var(--s1);
+}
+
+.page:not(.embedded) .checkboxLine {
+  min-height: 0;
+  align-self: start;
+}
+
+/* the summary read-out and the closing actions follow the same ramp */
+.page:not(.embedded) .summaryPanel {
+  margin-top: var(--s2);
+}
+
+.page:not(.embedded) .finalActions {
+  margin-top: var(--s3);
 }

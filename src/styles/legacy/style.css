@@ -557,8 +557,8 @@ html:not([data-theme="amigos-dark"]) .site-header.scrolled .dropdown-menu .item-
 .hero-content {
     position: absolute;
     left: 50%;
-    top: 35vh;
-    transform: translateX(-50%);
+    top: 50%;
+    transform: translate(-50%, -50%);
     width: min(1240px, 90%);
     text-align: center;
     color: #FDFBF6;
@@ -1440,7 +1440,7 @@ RESPONSIVE — MOBILE (≤768px)
     }
 
     .hero-content {
-        top: 30vh;
+        top: 50%;
         width: 92%;
     }
 
@@ -1494,7 +1494,9 @@ RESPONSIVE — MOBILE (≤768px)
         flex-direction: column;
         align-items: center;
         position: absolute;
-        bottom: 24px;
+        /* Clear the fixed WhatsApp and chat buttons, which sit ~70px up from the bottom
+           on mobile and otherwise intercept taps on the outer swatches. */
+        bottom: 96px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 60;
@@ -10505,6 +10507,7 @@ body[data-page="home"] .intro-title>span:not([style]) {
     display: block;
     width: min(980px, 92vw);
     margin: 24px auto 0;
+    font-weight: 400;
 }
 
 body[data-page="home"] .introBtn {

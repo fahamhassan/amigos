@@ -102,14 +102,22 @@ export async function POST(request) {
       return NextResponse.json({ errors: validation.errors }, { status: 400 });
     }
 
-    const result = await createOrUpdateCalculation(validation.values, { condition, postalCode, source: "QUICK_QUOTE" });
+    // The estimated surfaces above describe the scope for the CRM record and the PDF, but
+    // the price itself comes from the admin-editable reference values keyed on the raw
+    // property type (2½-room, 3½-room, house, …) rather than from derived square metres.
+    const result = await createOrUpdateCalculation(validation.values, {
+      condition,
+      postalCode,
+      locationCity,
+      source: "QUICK_QUOTE",
+      quickQuote: { propertyType: rawPropertyType, workScope, condition, postalCode }
+    });
 
     return NextResponse.json({
       sessionId: result.sessionId,
       status: result.status,
       currency: result.currency,
       lockedPrice: true,
-      priceLabel: "CHF ••••.–",
       estimatedSurfaces: {
         wallArea: totalWallArea,
         ceilingArea: totalCeilingArea,

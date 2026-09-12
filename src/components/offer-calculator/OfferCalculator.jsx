@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useAmigosTheme } from "@/lib/useAmigosTheme";
 import styles from "./OfferCalculator.module.css";
 
 const propertyTypes = [
@@ -123,6 +124,67 @@ const componentOptions = [
 
 const facadeComponent = { id: "facade", title: "Facade / Exterior Surface", iconKey: "facade", quantityKey: "facadeArea", label: "Facade area", unit: "m²" };
 
+/**
+ * Component-specific option sets (spec §4 and §6).
+ *
+ * Selecting a component surfaces only its own options; nothing here is asked of a
+ * customer who did not choose that component.
+ */
+const componentDetailGroups = {
+  doors: [
+    { id: "doorType", label: "Door type", choices: [
+      { id: "standard", title: "Standard" },
+      { id: "double", title: "Double" },
+      { id: "entrance", title: "Entrance" },
+      { id: "other", title: "Other" }
+    ] },
+    { id: "doorMaterial", label: "Material", choices: [
+      { id: "wood", title: "Wood" },
+      { id: "metal", title: "Metal" },
+      { id: "unsure", title: "Not sure" }
+    ] },
+    { id: "doorSides", label: "Painting", choices: [
+      { id: "one_side", title: "One side" },
+      { id: "both_sides", title: "Both sides" }
+    ] },
+    { id: "doorFrame", label: "Door frame", choices: [
+      { id: "yes", title: "Yes" },
+      { id: "no", title: "No" }
+    ] },
+    { id: "doorCondition", label: "Condition", choices: [
+      { id: "good", title: "Good" },
+      { id: "minor", title: "Minor preparation" },
+      { id: "renovation", title: "Renovation required" }
+    ] }
+  ],
+  railings: [
+    { id: "railingType", label: "Railing type", choices: [
+      { id: "balcony", title: "Balcony railing" },
+      { id: "stair", title: "Stair railing" }
+    ] },
+    { id: "railingMaterial", label: "Material", choices: [
+      { id: "metal", title: "Metal" },
+      { id: "wood", title: "Wood" }
+    ] },
+    { id: "railingCondition", label: "Condition", choices: [
+      { id: "good", title: "Good" },
+      { id: "minor", title: "Minor preparation" },
+      { id: "renovation", title: "Renovation required" }
+    ] }
+  ]
+};
+
+const componentDetailDefaults = {
+  doorType: "standard",
+  doorMaterial: "wood",
+  doorSides: "both_sides",
+  doorFrame: "yes",
+  doorCondition: "good",
+  railingType: "balcony",
+  railingMaterial: "metal",
+  railingCondition: "good"
+};
+
 const serviceOptions = [
   { id: "ceiling_paint_2_coats", title: "Paint ceilings – 2 coats", components: ["ceilings"] },
   { id: "wall_paint_2_coats", title: "Paint walls – 2 coats", components: ["walls", "facade"] },
@@ -133,9 +195,17 @@ const serviceOptions = [
   { id: "nicotine_treatment", title: "Nicotine treatment", components: ["walls", "ceilings"] },
   { id: "water_damage_repair", title: "Damage remediation", components: ["walls", "ceilings"] },
   { id: "priming_sealing", title: "Priming / Sealing", components: ["walls", "ceilings", "facade"] },
-  { id: "paint_railings", title: "Clean, sand & paint railings", components: ["railings"] },
+  { id: "paint_doors", title: "Paint doors", components: ["doors"] },
+  { id: "paint_windows", title: "Paint window frames", components: ["windows"] },
+  { id: "paint_radiators", title: "Paint radiators", components: ["radiators"] },
+  { id: "paint_baseboards", title: "Paint baseboards", components: ["baseboards"] },
+  { id: "railing_cleaning", title: "Clean railings", components: ["railings"] },
+  { id: "railing_sanding", title: "Sand railings", components: ["railings"] },
+  { id: "railing_priming", title: "Prime railings", components: ["railings"] },
+  { id: "paint_railings", title: "Paint / coat railings", components: ["railings"] },
   { id: "paint_stairs", title: "Paint / varnish stairs", components: ["stairs"] },
-  { id: "covering_protection", title: "Covering / Protection", components: ["ceilings", "walls", "doors", "windows", "radiators", "baseboards", "railings", "stairs", "facade"] }
+  { id: "paint_other", title: "Painting / coating – other items", components: ["other"] },
+  { id: "covering_protection", title: "Covering / Protection", components: ["ceilings", "walls", "doors", "windows", "radiators", "baseboards", "railings", "stairs", "facade", "other"] }
 ];
 
 const simpleServiceOptions = [
@@ -154,9 +224,10 @@ const detailedStepMeta = [
   { number: "02", key: "components", title: "Components", icon: "▦" },
   { number: "03", key: "services", title: "Work & Services", icon: "✦" },
   { number: "04", key: "quantities", title: "Quantities", icon: "↕" },
-  { number: "05", key: "result", title: "Result", icon: "◉" },
-  { number: "06", key: "verify", title: "Verify E-Mail", icon: "@" },
-  { number: "07", key: "price", title: "Price", icon: "✓" }
+  { number: "05", key: "location", title: "Location", icon: "◎" },
+  { number: "06", key: "result", title: "Summary", icon: "◉" },
+  { number: "07", key: "verify", title: "Verify E-Mail", icon: "@" },
+  { number: "08", key: "price", title: "Price", icon: "✓" }
 ];
 
 const simpleStepMeta = [
@@ -189,6 +260,7 @@ const initialState = {
   components: [],
   services: [],
   quantities: {},
+  componentDetails: { ...componentDetailDefaults },
   projectNotes: "",
   email: "",
   code: ["", "", "", ""],
@@ -402,7 +474,84 @@ function titlesFromIds(options, ids) {
     .filter(Boolean);
 }
 
-export default function OfferCalculator({ embedded = false, defaultFlow = "SELECT" }) {
+/* Renders the option groups belonging to the components the customer actually selected
+   (spec §4/§6). A doors-only project sees door options and nothing else. */
+function ComponentDetailFields({ components, details, onChange }) {
+  const groups = components
+    .filter((component) => componentDetailGroups[component])
+    .map((component) => ({ component, groups: componentDetailGroups[component] }));
+
+  if (!groups.length) return null;
+
+  return (
+    <>
+      {groups.map(({ component, groups: fields }) => (
+        <div key={component} className={styles.detailGroup}>
+          <span className={styles.detailGroupTitle}>
+            {componentOptions.find((option) => option.id === component)?.title || component} options
+          </span>
+          <div className={styles.quantityGrid}>
+            {fields.map((field) => (
+              <label key={field.id} className={styles.quantityField}>
+                <span>{field.label}</span>
+                <div>
+                  <select
+                    className={styles.detailSelect}
+                    value={details[field.id] ?? field.choices[0].id}
+                    onChange={(event) => onChange(field.id, event.target.value)}
+                  >
+                    {field.choices.map((choice) => (
+                      <option key={choice.id} value={choice.id}>{choice.title}</option>
+                    ))}
+                  </select>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+/* Both journeys ask for the location before pricing, so the travel cost is based on the
+   customer's postcode rather than a flat fallback. */
+function LocationFields({ postalCode, city, onChange }) {
+  return (
+    <div className={styles.quantityGrid} style={{ marginTop: "16px" }}>
+      <label className={styles.quantityField} style={{ gridColumn: "1 / -1" }}>
+        <span>Postal Code (PLZ)</span>
+        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+          <span style={{ position: "absolute", left: "12px", color: "var(--yellow)", pointerEvents: "none", display: "flex", alignItems: "center", width: "20px", height: "20px" }}>
+            <ComponentIcon iconKey="pin" />
+          </span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={postalCode}
+            placeholder="e.g. 4600 (Olten & surroundings)"
+            style={{ paddingLeft: "38px" }}
+            onChange={(event) => onChange("postalCode", event.target.value)}
+          />
+        </div>
+      </label>
+      <label className={styles.quantityField} style={{ gridColumn: "1 / -1" }}>
+        <span>City / Town</span>
+        <div>
+          <input
+            type="text"
+            value={city}
+            placeholder="e.g. Olten"
+            onChange={(event) => onChange("locationCity", event.target.value)}
+          />
+        </div>
+      </label>
+    </div>
+  );
+}
+
+export default function OfferCalculator({ embedded = false, defaultFlow = "SELECT", detailedQuoteHref = "" }) {
+  const { isDark, toggleTheme } = useAmigosTheme();
   const [step, setStep] = useState(0);
   const [state, setState] = useState(() => ({
     ...initialState,
@@ -419,7 +568,13 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
 
   const isSimple = state.calculatorType === "SIMPLE";
   const isSelect = state.calculatorType === "SELECT";
+  // Homepage block (spec §8): the Quick Quote runs directly, with the Detailed Quote
+  // offered alongside as a link to its own page rather than as an in-place mode switch.
+  const isHomeQuickQuote = embedded && isSimple && Boolean(detailedQuoteHref);
   const currentStepMeta = isSimple ? simpleStepMeta : detailedStepMeta;
+  // Detailed inputs run 0–4 since Location was added as step 05 (§7B); the simple flow
+  // still ends its inputs at 3, with 4 as its contact screen.
+  const inputStepCount = isSimple ? 4 : 5;
 
   const components = useMemo(() => {
     return state.propertyType === "facade"
@@ -435,13 +590,13 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
   }, [state.components]);
 
   const visibleQuantities = useMemo(() => {
-    const impliedComponents = serviceOptions
-      .filter((service) => state.services.includes(service.id))
-      .flatMap((service) => service.components);
-    const selectedComponents = new Set([...state.components, ...impliedComponents]);
+    // Measurement fields come only from components the customer actually selected.
+    // Deriving them from selected services pulled in every component a shared service
+    // maps to, so a doors-only project was asked for wall and ceiling m².
+    const selectedComponents = new Set(state.components);
 
     return components.filter((component) => selectedComponents.has(component.id));
-  }, [components, state.components, state.services]);
+  }, [components, state.components]);
 
   const selectedComponentTitles = useMemo(() => {
     return titlesFromIds(components, state.components);
@@ -463,6 +618,17 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
     return ((step + 1) / detailedStepMeta.length) * 100;
   }, [isSimple, step]);
 
+  function updateComponentDetail(key, value) {
+    setState((current) => ({
+      ...current,
+      componentDetails: { ...current.componentDetails, [key]: value }
+    }));
+  }
+
+  function updateField(key, value) {
+    setState((current) => ({ ...current, [key]: value }));
+  }
+
   function updateCustomerInfo(key, value) {
     setState((current) => ({
       ...current,
@@ -483,6 +649,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
     if (step === 1) return state.components.length > 0;
     if (step === 2) return state.services.length > 0;
     if (step === 3) return visibleQuantities.every((item) => Number(state.quantities[item.quantityKey]) > 0);
+    if (step === 4) return Boolean(state.postalCode && state.postalCode.trim().length >= 4);
     return true;
   }
 
@@ -502,6 +669,10 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
         components: state.components,
         services: state.services,
         quantities: state.quantities,
+        componentDetails: state.componentDetails,
+        condition: state.condition,
+        postalCode: state.postalCode,
+        locationCity: state.locationCity,
         projectNotes: state.projectNotes
       })
     });
@@ -515,7 +686,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
     }
 
     setSessionId(data.sessionId);
-    setStep(4);
+    setStep(5);
   }
 
   async function calculateQuick() {
@@ -572,7 +743,9 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
       return;
     }
 
-    if (step === 3) {
+    // Detailed inputs now run 0–4 (Location added as step 05, spec §7B); 4 is the last
+    // input step, so continuing from there triggers the calculation.
+    if (step === 4) {
       calculateDetailed();
       return;
     }
@@ -673,7 +846,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
     }
 
     setCodeSent(true);
-    setStep(5);
+    setStep(6);
     setNotice(data.developmentCode ? `Development code: ${data.developmentCode}` : "Verification code sent. Please check your e-mail.");
   }
 
@@ -720,8 +893,8 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
     }
 
     setPriceRange(data.priceRange);
-    // Simple mode → step 11 (simple price reveal); Detailed mode → step 6
-    setStep(isSimple ? 11 : 6);
+    // Simple mode → step 11 (simple price reveal); Detailed mode → step 7 (price)
+    setStep(isSimple ? 11 : 7);
   }
 
   async function uploadPhoto(file, category) {
@@ -859,8 +1032,8 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
       <button key={option.id} type="button" className={cx(styles.selectionCard, selected && styles.selectedCard)} onClick={onClick}>
         <span className={styles.cardIcon}>{option.iconKey ? <ComponentIcon iconKey={option.iconKey} /> : option.icon || "✦"}</span>
         <span style={{ display: "flex", flexDirection: "column", gap: "2px", textAlign: "left", flex: 1 }}>
-          <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--white)" }}>{option.title}</span>
-          {option.unit && <small style={{ color: "rgba(253, 251, 246, 0.6)", fontSize: "11px" }}>Unit: {option.unit}</small>}
+          <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--ink)" }}>{option.title}</span>
+          {option.unit && <small style={{ color: "var(--ink-muted)", fontSize: "11px" }}>Unit: {option.unit}</small>}
         </span>
         <i>{selected ? "✓" : "›"}</i>
       </button>
@@ -1024,55 +1197,67 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
     }
 
     return (
-      <main className={cx(styles.page, styles.embedded, "offerCalculatorEmbedded")}>
+      <main className={cx(styles.page, styles.embedded, isHomeQuickQuote && styles.homeLayout, "offerCalculatorEmbedded")}>
         <aside className={styles.embeddedRail}>
-          <div className={styles.heroCopy}>
-            <span className={styles.brand}>AMIGOS MALER GMBH</span>
-            <strong>Kompetenz verbindet</strong>
-            <h1>OFFER CALCULATOR & REQUEST</h1>
-            <p>Calculate, see your price – and request your offer.</p>
-            <ul>
-              <li>Calculate your estimated price in a few steps</li>
-              <li>See your result after verifying your e-mail</li>
-              <li>Request your personal offer or book a consultation</li>
-            </ul>
-          </div>
+          {isHomeQuickQuote ? (
+            /* Homepage rail is the Detailed Quote CTA for Customer B — it links to the
+               separate calculator page rather than swapping this one in place. */
+            <div className={styles.sidebarModeCard}>
+              <span className={styles.sidebarModeKicker}>FOR PROFESSIONALS &amp; PRECISE PLANNING</span>
+              <h3 className={styles.sidebarModeTitle}>Create a Detailed Quote.</h3>
+              <ul className={styles.detailedCtaList}>
+                <li>Selectable components and services</li>
+                <li>Ideal for architects, property managers &amp; professionals</li>
+              </ul>
+              <a className={styles.sidebarModeSwitchBtn} href={detailedQuoteHref}>
+                <span>GO TO DETAILED QUOTE CALCULATOR</span>
+                <i>→</i>
+              </a>
+            </div>
+          ) : (
+            <>
+              <div className={styles.heroCopy}>
+                <span className={styles.brand}>AMIGOS MALER GMBH</span>
+                <strong>Kompetenz verbindet</strong>
+                <h1>OFFER CALCULATOR &amp; REQUEST</h1>
+                <p>Calculate, see your price – and request your offer.</p>
+                <ul>
+                  <li>Calculate your estimated price in a few steps</li>
+                  <li>See your result after verifying your e-mail</li>
+                  <li>Request your personal offer or book a consultation</li>
+                </ul>
+              </div>
 
-          {/* MODE SWITCH CTA */}
-          <div className={styles.sidebarModeCard}>
-            <span className={styles.sidebarModeKicker}>
-              {isSimple ? "FOR HOMEOWNERS" : "FOR PROFESSIONALS"}
-            </span>
-            <h3 className={styles.sidebarModeTitle}>
-              {isSimple ? "Fast Estimate Mode" : "Detailed Quote Mode"}
-            </h3>
-            <p className={styles.sidebarModeDesc}>
-              {isSimple
-                ? "Immediate estimate in 5 simple steps without m² wall measurements."
-                : "Exact measurements with doors, windows, radiators & repair surface specs."}
-            </p>
-            <button
-              type="button"
-              className={styles.sidebarModeSwitchBtn}
-              onClick={() => {
-                setState((curr) => ({
-                  ...curr,
-                  calculatorType: isSimple ? "DETAILED" : "SIMPLE"
-                }));
-                setStep(0);
-              }}
-            >
-              <span>{isSimple ? "Switch to Detailed Quote" : "Switch to Fast Estimate"}</span>
-              <i>→</i>
-            </button>
-            <button
-              type="button"
-              className={styles.sidebarBackBtn}
-              onClick={() => setState((curr) => ({ ...curr, calculatorType: "SELECT" }))}
-            >
-              <span>← Back to Selection</span>
-            </button>
-          </div>
+              {/* MODE SWITCH CTA */}
+              <div className={styles.sidebarModeCard}>
+                <span className={styles.sidebarModeKicker}>
+                  {isSimple ? "FOR HOMEOWNERS" : "FOR PROFESSIONALS"}
+                </span>
+                <h3 className={styles.sidebarModeTitle}>
+                  {isSimple ? "Fast Estimate Mode" : "Detailed Quote Mode"}
+                </h3>
+                <p className={styles.sidebarModeDesc}>
+                  {isSimple
+                    ? "Immediate estimate in 5 simple steps without m² wall measurements."
+                    : "Exact measurements with doors, windows, radiators & repair surface specs."}
+                </p>
+                <button
+                  type="button"
+                  className={styles.sidebarModeSwitchBtn}
+                  onClick={() => {
+                    setState((curr) => ({
+                      ...curr,
+                      calculatorType: isSimple ? "DETAILED" : "SIMPLE"
+                    }));
+                    setStep(0);
+                  }}
+                >
+                  <span>{isSimple ? "Switch to Detailed Quote" : "Switch to Fast Estimate"}</span>
+                  <i>→</i>
+                </button>
+              </div>
+            </>
+          )}
 
           <div className={styles.securityCard}>
             <span>🔒</span>
@@ -1082,6 +1267,12 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
         </aside>
 
         <div className={styles.embeddedWorkspace}>
+          {isHomeQuickQuote && (
+            <header className={styles.quickQuoteIntro}>
+              <h2>Your Estimated Quote in Just a Few Steps</h2>
+              <p>Simple. Fast. No obligation. Receive your price after entering your email address.</p>
+            </header>
+          )}
           {/* PROGRESS BAR */}
           <nav className={cx(styles.progressNav, isSimple && styles.progressNavSimple)} aria-label="Calculator progress">
             <span className={styles.progressFill} style={{ width: `${progress}%` }} />
@@ -1102,7 +1293,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                   type="button"
                   onClick={() => {
                     if (isSimple) {
-                      if (step <= 4 && index < step) setStep(index);
+                      if (step <= inputStepCount && index < step) setStep(index);
                     } else {
                       if (index < step) setStep(index);
                     }
@@ -1116,7 +1307,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
             })}
           </nav>
 
-          <section className={cx(styles.embeddedLayout, (isSimple || step < 4) && styles.embeddedLayoutExpanded)}>
+          <section className={cx(styles.embeddedLayout, (isSimple || step < inputStepCount) && styles.embeddedLayoutExpanded)}>
             <div className={cx(styles.consultationShell, styles.embeddedLeft)}>
               {errors.general && <p className={styles.error}>{errors.general}</p>}
               {notice && <p className={styles.notice}>{notice}</p>}
@@ -1167,7 +1358,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                   </div>
 
                   <div style={{ marginTop: "16px" }}>
-                    <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "var(--white)" }}>
+                    <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "var(--ink)" }}>
                       Number of Rooms: <b style={{ color: "var(--yellow)" }}>{state.roomCount} {state.roomCount === 1 ? "Room" : "Rooms"}</b>
                     </div>
                     <div className={styles.roomChips}>
@@ -1185,7 +1376,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                   </div>
 
                   <div style={{ marginTop: "14px" }}>
-                    <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "var(--white)" }}>
+                    <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "var(--ink)" }}>
                       Average Room Size
                     </div>
                     <div className={styles.roomChips}>
@@ -1231,36 +1422,17 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                   <span className={styles.stepKicker}>04 Location</span>
                   <h2>Where is the property located?</h2>
                   <p>Your location helps us calculate any travel costs accurately.</p>
+                  <LocationFields postalCode={state.postalCode} city={state.locationCity} onChange={updateField} />
+                </div>
+              )}
 
-                  <div className={styles.quantityGrid} style={{ marginTop: "16px" }}>
-                    <label className={styles.quantityField} style={{ gridColumn: "1 / -1" }}>
-                      <span>Postal Code (PLZ)</span>
-                      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                        <span style={{ position: "absolute", left: "12px", color: "var(--yellow)", pointerEvents: "none", display: "flex", alignItems: "center", width: "20px", height: "20px" }}>
-                          <ComponentIcon iconKey="pin" />
-                        </span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={state.postalCode}
-                          placeholder="e.g. 4600 (Olten & surroundings)"
-                          style={{ paddingLeft: "38px" }}
-                          onChange={(event) => setState((curr) => ({ ...curr, postalCode: event.target.value }))}
-                        />
-                      </div>
-                    </label>
-                    <label className={styles.quantityField} style={{ gridColumn: "1 / -1" }}>
-                      <span>City / Town</span>
-                      <div>
-                        <input
-                          type="text"
-                          value={state.locationCity}
-                          placeholder="e.g. Olten"
-                          onChange={(event) => setState((curr) => ({ ...curr, locationCity: event.target.value }))}
-                        />
-                      </div>
-                    </label>
-                  </div>
+              {/* DETAILED MODE — STEP 5: Location */}
+              {!isSimple && step === 4 && (
+                <div className={styles.stepPanel}>
+                  <span className={styles.stepKicker}>05 Location</span>
+                  <h2>Where is the property located?</h2>
+                  <p>Your location helps us calculate any travel costs accurately.</p>
+                  <LocationFields postalCode={state.postalCode} city={state.locationCity} onChange={updateField} />
                 </div>
               )}
 
@@ -1364,7 +1536,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                   {isSimple && step === 11 && (
                     <div className={styles.pricePanel}>
                       <div className={styles.successMark}>✓</div>
-                      <span className={styles.stepKicker}>Unverbindlicher Angebotspreis</span>
+                      <span className={styles.stepKicker}>Your Estimated Quotation</span>
                       <h2>Your Estimated Offer Price (Angebotspreis)</h2>
                       <strong className={styles.priceRange}>{priceRange}</strong>
                       <p>This is an approximate price range based on your project details. The final price may vary after review or an on-site inspection.</p>
@@ -1467,6 +1639,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                           </label>
                         ))}
                       </div>
+                      <ComponentDetailFields components={state.components} details={state.componentDetails} onChange={updateComponentDetail} />
                       <label className={styles.notesField}>
                         <span>Project information</span>
                         <textarea value={state.projectNotes} placeholder="Tell us anything important about access, condition, damage or timing." onChange={(event) => setState((current) => ({ ...current, projectNotes: event.target.value }))} />
@@ -1474,8 +1647,8 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                     </div>
                   )}
 
-                  {/* SUMMARY PANEL (When step >= 4 for detailed mode) */}
-                  {!isSimple && step >= 4 && (
+                  {/* SUMMARY PANEL (detailed mode, after the Location step triggers calculation) */}
+                  {!isSimple && step >= 5 && (
                     <div className={cx(styles.stepPanel, styles.embeddedComplete)}>
                       <span className={styles.stepKicker}>Selections Complete</span>
                       <h2>Your project details are ready.</h2>
@@ -1505,26 +1678,26 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                   )}
 
                   {/* NAV ACTIONS (Back & Continue) */}
-                  {step < 4 && (
+                  {step < inputStepCount && (
                     <div className={styles.navActions}>
                       {step > 0 ? (
                         <button type="button" className={styles.secondaryAction} onClick={() => setStep((current) => current - 1)}>
                           ← BACK
                         </button>
-                      ) : (
-                        <button type="button" className={styles.secondaryAction} onClick={() => setState((curr) => ({ ...curr, calculatorType: "SELECT" }))}>
-                          ← BACK TO SELECTION
-                        </button>
+                      ) : isHomeQuickQuote ? null : (
+                        <a className={styles.secondaryAction} href="/">
+                          ← QUICK QUOTE INSTEAD
+                        </a>
                       )}
                       <button type="button" className={styles.primaryAction} disabled={!canContinue() || busy} onClick={next}>
-                        {isSimple ? "CONTINUE →" : (step === 3 ? "CALCULATE" : "CONTINUE →")}
+                        {isSimple ? "CONTINUE →" : (step === 4 ? "CALCULATE" : "CONTINUE →")}
                       </button>
                     </div>
                   )}
 
-                  {!isSimple && step >= 4 && step < 6 && (
+                  {!isSimple && step >= 5 && step < 7 && (
                     <div className={styles.navActions}>
-                      <button type="button" className={styles.secondaryAction} onClick={() => setStep(3)}>
+                      <button type="button" className={styles.secondaryAction} onClick={() => setStep(4)}>
                         ← EDIT SELECTIONS
                       </button>
                     </div>
@@ -1532,11 +1705,11 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                 </div>
 
                 {/* UNLOCK / VERIFY / PRICE PANEL (Detailed mode only, Step >= 4) */}
-                {!isSimple && step >= 4 && (
+                {!isSimple && step >= 5 && (
                   <aside className={cx(styles.consultationShell, styles.embeddedRight, styles.unlockPanel)}>
                     {step === 4 && (
                       <div className={styles.resultLocked}>
-                        <span className={styles.stepKicker}>05 Contact & Price Protection</span>
+                        <span className={styles.stepKicker}>06 Summary</span>
                         <h2>Your estimated quote is ready.</h2>
                         <p>Enter your contact details to receive your personal AMIGOS estimated quotation. Your price will be shown immediately after e-mail verification.</p>
                         
@@ -1581,7 +1754,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
 
                     {step === 5 && (
                       <div className={styles.verifyPanel}>
-                        <span className={styles.stepKicker}>04 Verify E-Mail</span>
+                        <span className={styles.stepKicker}>07 Verify E-Mail</span>
                         <h2>Verify your e-mail</h2>
                         {!codeSent ? (
                           <>
@@ -1616,7 +1789,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                                 />
                               ))}
                             </div>
-                            <button className={styles.primaryAction} type="button" onClick={verifyCode} disabled={busy}>Unlock Estimated Price</button>
+                            <button className={styles.primaryAction} type="button" onClick={verifyCode} disabled={busy}>Verify E-Mail</button>
                             <button className={styles.textButton} type="button" onClick={sendCode}>Didn't receive a code? Resend code</button>
                           </>
                         )}
@@ -1626,7 +1799,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                     {step === 6 && (
                       <div className={styles.pricePanel}>
                         <div className={styles.successMark}>✓</div>
-                        <span className={styles.stepKicker}>05 Unverbindlicher Angebotspreis</span>
+                        <span className={styles.stepKicker}>08 Your Estimated Quotation</span>
                         <h2>Your Estimated Offer Price (Angebotspreis)</h2>
                         <strong className={styles.priceRange}>{priceRange}</strong>
                         <p>This is an approximate price range based on the information provided. The final price may vary after review and/or an on-site inspection.</p>
@@ -1901,15 +2074,38 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
     <main className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <span className={styles.brand}>AMIGOS MALER GMBH</span>
+          <button
+            className={styles.themeToggle}
+            type="button"
+            aria-label={`Switch to ${isDark ? "day" : "night"} mode`}
+            aria-pressed={isDark}
+            onClick={toggleTheme}
+          >
+            <span className={styles.themeToggleIcon} aria-hidden="true">
+              {isDark ? (
+                <svg className={styles.themeIcon} viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M20.2 14.2A7.6 7.6 0 0 1 9.8 3.8 8.5 8.5 0 1 0 20.2 14.2Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              ) : (
+                <svg className={styles.themeIcon} viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="4.2" fill="currentColor" />
+                  <path
+                    d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2 5.5 5.5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              )}
+            </span>
+          </button>
+          <span className={styles.brand}>FOR PROFESSIONALS &amp; PRECISE PLANNING</span>
           <strong>Kompetenz verbindet</strong>
-          <h1>OFFER CALCULATOR & REQUEST</h1>
-          <p>Calculate, see your price – and request your offer.</p>
-          <ul>
-            <li>Calculate your estimated price in a few steps</li>
-            <li>See your result after verifying your e-mail</li>
-            <li>Request your personal offer or book a consultation</li>
-          </ul>
+          <h1>Create a Detailed Quote.</h1>
+          <p>Select your components and services, enter only the measurements they require, and see your result after e-mail verification.</p>
         </div>
         <aside className={styles.securityCard}>
           <span>🔒</span>
@@ -1937,7 +2133,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
               type="button"
               onClick={() => {
                 if (isSimple) {
-                  if (step <= 4 && index < step) setStep(index);
+                  if (step <= inputStepCount && index < step) setStep(index);
                 } else {
                   if (index < step) setStep(index);
                 }
@@ -1976,7 +2172,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
               )}
             </div>
             {!isSimple && state.propertyType === "room" && (
-              <div className={styles.roomChips} style={{ marginTop: "16px" }}>
+              <div className={styles.roomChips}>
                 {roomTypes.map((room) => (
                   <button key={room} type="button" className={state.roomType === room ? styles.activeChip : ""} onClick={() => setState((current) => ({ ...current, roomType: room }))}>{room}</button>
                 ))}
@@ -2001,7 +2197,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
             </div>
 
             <div style={{ margin: "18px 0" }}>
-              <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "var(--white)" }}>
+              <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "var(--ink)" }}>
                 Number of Rooms: <b style={{ color: "var(--yellow)" }}>{state.roomCount} {state.roomCount === 1 ? "Room" : "Rooms"}</b>
               </div>
               <div className={styles.roomChips}>
@@ -2019,7 +2215,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
             </div>
 
             <div style={{ margin: "18px 0" }}>
-              <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "var(--white)" }}>
+              <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "var(--ink)" }}>
                 Average Room Size
               </div>
               <div className={styles.roomChips}>
@@ -2065,36 +2261,17 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
             <span className={styles.stepKicker}>04 Location</span>
             <h2>Where is the property located?</h2>
             <p>Your location helps us calculate any travel costs accurately.</p>
+            <LocationFields postalCode={state.postalCode} city={state.locationCity} onChange={updateField} />
+          </div>
+        )}
 
-            <div className={styles.quantityGrid} style={{ marginTop: "16px" }}>
-              <label className={styles.quantityField} style={{ gridColumn: "1 / -1" }}>
-                <span>Postal Code (PLZ)</span>
-                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                  <span style={{ position: "absolute", left: "12px", color: "var(--yellow)", pointerEvents: "none", display: "flex", alignItems: "center", width: "20px", height: "20px" }}>
-                    <ComponentIcon iconKey="pin" />
-                  </span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={state.postalCode}
-                    placeholder="e.g. 4600 (Olten & surroundings)"
-                    style={{ paddingLeft: "38px" }}
-                    onChange={(event) => setState((curr) => ({ ...curr, postalCode: event.target.value }))}
-                  />
-                </div>
-              </label>
-              <label className={styles.quantityField} style={{ gridColumn: "1 / -1" }}>
-                <span>City / Town</span>
-                <div>
-                  <input
-                    type="text"
-                    value={state.locationCity}
-                    placeholder="e.g. Olten"
-                    onChange={(event) => setState((curr) => ({ ...curr, locationCity: event.target.value }))}
-                  />
-                </div>
-              </label>
-            </div>
+        {/* DETAILED MODE STEP 5: Location */}
+        {!isSimple && step === 4 && (
+          <div className={styles.stepPanel}>
+            <span className={styles.stepKicker}>05 Location</span>
+            <h2>Where is the property located?</h2>
+            <p>Your location helps us calculate any travel costs accurately.</p>
+            <LocationFields postalCode={state.postalCode} city={state.locationCity} onChange={updateField} />
           </div>
         )}
 
@@ -2108,7 +2285,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
               Your price will be shown after e-mail verification.
             </p>
 
-            <div className={styles.customerGrid} style={{ marginTop: "16px" }}>
+            <div className={styles.customerGrid}>
               {[
                 ["firstName", "First Name *"],
                 ["lastName", "Last Name *"],
@@ -2138,7 +2315,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
             {errors.general && <p className={styles.error}>{errors.general}</p>}
             {notice && <p className={styles.notice}>{notice}</p>}
 
-            <div className={styles.navActions} style={{ marginTop: "16px" }}>
+            <div className={styles.navActions}>
               <button type="button" className={styles.secondaryAction} onClick={() => setStep(3)}>
                 ← BACK
               </button>
@@ -2198,12 +2375,12 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
         {isSimple && step === 11 && (
           <div className={styles.pricePanel}>
             <div className={styles.successMark}>✓</div>
-            <span className={styles.stepKicker}>Unverbindlicher Angebotspreis</span>
+            <span className={styles.stepKicker}>Your Estimated Quotation</span>
             <h2>Your Estimated Offer Price (Angebotspreis)</h2>
             <strong className={styles.priceRange}>{priceRange}</strong>
             <p>This is an approximate price range based on your project details. The final price may vary after review or an on-site inspection.</p>
 
-            <div className={styles.summaryPanel} style={{ marginTop: "16px" }}>
+            <div className={styles.summaryPanel}>
               <h3>Your project summary</h3>
               <dl>
                 <div><dt>Property</dt><dd>{propertyTypes.find((o) => o.id === state.propertyType)?.title || "Not selected"}</dd></div>
@@ -2214,7 +2391,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
               </dl>
             </div>
 
-            <div className={styles.finalActions} style={{ marginTop: "20px" }}>
+            <div className={styles.finalActions}>
               <button className={styles.primaryAction} type="button" onClick={() => submitRequest("OFFER")} disabled={busy}>REQUEST A FREE OFFER</button>
               <button className={styles.secondaryAction} type="button" onClick={() => submitRequest("CONSULTATION")} disabled={busy}>REQUEST SITE VISIT</button>
               {sessionId && (
@@ -2230,7 +2407,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
               )}
             </div>
 
-            <div style={{ marginTop: "12px", textAlign: "center" }}>
+            <div style={{ textAlign: "center" }}>
               <a
                 href="https://wa.me/41441234567?text=Hallo%20AMIGOS%20Maler,%20ich%20habe%20eine%20Offerte%20berechnet"
                 target="_blank"
@@ -2300,6 +2477,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                 </label>
               ))}
             </div>
+            <ComponentDetailFields components={state.components} details={state.componentDetails} onChange={updateComponentDetail} />
             <label className={styles.notesField}>
               <span>Project information</span>
               <textarea value={state.projectNotes} placeholder="Tell us anything important about access, condition, damage or timing." onChange={(event) => setState((current) => ({ ...current, projectNotes: event.target.value }))} />
@@ -2307,14 +2485,14 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
           </div>
         )}
 
-        {/* DETAILED MODE STEP 4: Contact & Price Protection */}
-        {!isSimple && step === 4 && (
+        {/* DETAILED MODE index 5 — "06 Summary": contact & price protection */}
+        {!isSimple && step === 5 && (
           <div className={styles.resultLocked}>
-            <span className={styles.stepKicker}>05 Contact & Price Protection</span>
+            <span className={styles.stepKicker}>06 Summary</span>
             <h2>Your estimated quote is ready.</h2>
             <p>Enter your contact details to receive your personal AMIGOS estimated quotation. Your price will be shown immediately after e-mail verification.</p>
             
-            <div className={styles.customerGrid} style={{ marginTop: "14px" }}>
+            <div className={styles.customerGrid}>
               <label>
                 <span>First Name *</span>
                 <input
@@ -2346,17 +2524,17 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                 />
               </label>
             </div>
-            {errors.general && <p className={styles.error} style={{ marginTop: "10px" }}>{errors.general}</p>}
-            <button className={styles.primaryAction} style={{ marginTop: "14px" }} type="button" onClick={sendDetailedCode} disabled={busy}>
+            {errors.general && <p className={styles.error}>{errors.general}</p>}
+            <button className={styles.primaryAction} type="button" onClick={sendDetailedCode} disabled={busy}>
               {busy ? "SENDING…" : "SEND VERIFICATION CODE →"}
             </button>
           </div>
         )}
 
-        {/* STEP 5: Verify E-mail */}
-        {step === 5 && (
+        {/* DETAILED MODE index 6 — "07 Verify E-Mail" */}
+        {step === 6 && (
           <div className={styles.verifyPanel}>
-            <span className={styles.stepKicker}>06 Verify E-Mail</span>
+            <span className={styles.stepKicker}>07 Verify E-Mail</span>
             <h2>Verify your e-mail</h2>
             {!codeSent ? (
               <>
@@ -2391,18 +2569,18 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
                     />
                   ))}
                 </div>
-                <button className={styles.primaryAction} type="button" onClick={verifyCode} disabled={busy}>Unlock Estimated Price</button>
+                <button className={styles.primaryAction} type="button" onClick={verifyCode} disabled={busy}>Verify E-Mail</button>
                 <button className={styles.textButton} type="button" onClick={sendCode}>Didn't receive a code? Resend code</button>
               </>
             )}
           </div>
         )}
 
-        {/* STEP 6: Unverbindlicher Angebotspreis */}
-        {step === 6 && (
+        {/* DETAILED MODE index 7 — "08 Your Estimated Quotation" */}
+        {step === 7 && (
           <div className={styles.pricePanel}>
             <div className={styles.successMark}>✓</div>
-            <span className={styles.stepKicker}>07 Unverbindlicher Angebotspreis</span>
+            <span className={styles.stepKicker}>08 Your Estimated Quotation</span>
             <h2>Your Estimated Offer Price (Angebotspreis)</h2>
             <strong className={styles.priceRange}>{priceRange}</strong>
             <p>This is an approximate price range based on the information provided. The final price may vary after review and/or an on-site inspection.</p>
@@ -2496,7 +2674,7 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
               )}
             </div>
 
-            <div style={{ marginTop: "12px", textAlign: "center" }}>
+            <div style={{ textAlign: "center" }}>
               <a
                 href="https://wa.me/41441234567?text=Hallo%20AMIGOS%20Maler,%20ich%20habe%20eine%20Offerte%20berechnet"
                 target="_blank"
@@ -2512,19 +2690,19 @@ export default function OfferCalculator({ embedded = false, defaultFlow = "SELEC
         )}
 
         {/* NON-EMBEDDED NAV ACTIONS */}
-        {step < 4 && (
+        {step < inputStepCount && (
           <div className={styles.navActions}>
             {step > 0 ? (
               <button type="button" className={styles.secondaryAction} onClick={() => setStep((current) => current - 1)}>
                 ← BACK
               </button>
             ) : (
-              <button type="button" className={styles.secondaryAction} onClick={() => setState((curr) => ({ ...curr, calculatorType: "SELECT" }))}>
-                ← BACK TO SELECTION
-              </button>
+              <a className={styles.secondaryAction} href="/">
+                ← QUICK QUOTE INSTEAD
+              </a>
             )}
             <button type="button" className={styles.primaryAction} disabled={!canContinue() || busy} onClick={next}>
-              {isSimple ? "CONTINUE →" : (step === 3 ? "CALCULATE" : "CONTINUE →")}
+              {isSimple ? "CONTINUE →" : (step === 4 ? "CALCULATE" : "CONTINUE →")}
             </button>
           </div>
         )}

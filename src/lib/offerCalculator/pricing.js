@@ -1,54 +1,46 @@
-import { calculateTravelCost } from "./pricingSettings";
+import { calculateTravelCost, DEFAULT_PRICING_SETTINGS } from "./pricingSettings";
 
-const COMPONENT_MINIMUMS = {
-  walls: 42000,
-  ceilings: 26000,
-  doors: 18000,
-  windows: 16000,
-  radiators: 14000,
-  baseboards: 12000,
-  facade: 90000,
-  railings: 18000,
-  stairs: 22000,
-  other: 18000
+/* Maps each component to the quantity field it measures. The prices themselves live in
+   the admin-editable pricing settings, not here. */
+const QUANTITY_KEYS = {
+  walls: "wallArea",
+  ceilings: "ceilingArea",
+  doors: "doors",
+  windows: "windows",
+  radiators: "radiators",
+  baseboards: "baseboards",
+  facade: "facadeArea",
+  railings: "railingLength",
+  stairs: "stairSteps",
+  other: "otherUnits"
 };
 
-const PROPERTY_MULTIPLIERS = {
-  apartment: 1,
-  house: 1.08,
-  commercial: 1.16,
-  facade: 1.2,
-  room: 0.92,
-  other: 1.05
+const QUICK_BASE_PRICE_KEYS = {
+  "2_5_apartment": "2_5_room_apartment_base_price",
+  "3_5_apartment": "3_5_room_apartment_base_price",
+  "4_5_apartment": "4_5_room_apartment_base_price",
+  "5_5_apartment": "5_5_room_apartment_base_price",
+  house: "house_base_price",
+  commercial: "commercial_base_price",
+  other: "other_base_price"
 };
 
-const SERVICE_FACTORS = {
-  ceiling_paint_2_coats: 1,
-  wall_paint_2_coats: 1,
-  remove_wallpaper: 0.46,
-  apply_wallpaper: 1.18,
-  filling_spackling: 0.52,
-  mold_treatment: 0.7,
-  nicotine_treatment: 0.62,
-  water_damage_repair: 0.86,
-  priming_sealing: 0.38,
-  covering_protection: 0.22,
-  paint_railings: 0.85,
-  paint_stairs: 0.95
+const SCOPE_MODIFIER_KEYS = {
+  walls: "walls_modifier",
+  ceilings: "ceilings_modifier",
+  walls_ceilings: "walls_and_ceilings_modifier"
 };
 
-const QUANTITY_RULES = {
-  walls: { key: "wallArea", minimum: 12, weight: 1850 },
-  ceilings: { key: "ceilingArea", minimum: 8, weight: 1600 },
-  doors: { key: "doors", minimum: 1, weight: 14500 },
-  windows: { key: "windows", minimum: 1, weight: 11000 },
-  radiators: { key: "radiators", minimum: 1, weight: 12500 },
-  baseboards: { key: "baseboards", minimum: 8, weight: 1650 },
-  facade: { key: "facadeArea", minimum: 25, weight: 2850 },
-  railings: { key: "railingLength", minimum: 2, weight: 6500 },
-  stairs: { key: "stairSteps", minimum: 5, weight: 4500 },
-  other: { key: "otherUnits", minimum: 1, weight: 18000 }
+const CONDITION_MODIFIER_KEYS = {
+  good: "good_condition_modifier",
+  minor_repairs: "minor_repairs_modifier",
+  renovation: "renovation_modifier"
 };
+
+function settingValue(settings, key) {
+  const number = Number(settings?.[key] ?? DEFAULT_PRICING_SETTINGS[key]);
+  return Number.isFinite(number) ? number : 0;
+}
 
 function asNumber(value) {
   const number = Number(value);
@@ -67,48 +59,124 @@ export function calculateOfferPrice(project, options = {}) {
   const components = unique(project.components);
   const services = unique(project.services);
   const quantities = project.quantities || {};
-  const propertyMultiplier = PROPERTY_MULTIPLIERS[project.propertyType] || PROPERTY_MULTIPLIERS.other;
+
+  // Every factor below is an admin-editable setting (§13); DEFAULT_PRICING_SETTINGS holds
+  // the seed values, so behaviour is unchanged until someone edits them in the backend.
+  const settings = options.settings || DEFAULT_PRICING_SETTINGS;
+  const propertyMultiplier =
+    settingValue(settings, `property_multiplier_${project.propertyType}`) ||
+    settingValue(settings, "property_multiplier_other");
 
   let componentTotal = 0;
 
   for (const component of components) {
-    const rule = QUANTITY_RULES[component];
-    if (!rule) continue;
+    const quantityKey = QUANTITY_KEYS[component];
+    if (!quantityKey) continue;
 
-    const quantity = Math.max(asNumber(quantities[rule.key]), rule.minimum);
-    componentTotal += Math.max(quantity * rule.weight, COMPONENT_MINIMUMS[component] || 0);
+    const minimumQuantity = settingValue(settings, `quantity_min_${component}`);
+    const unitWeight = settingValue(settings, `quantity_weight_${component}`);
+    const quantity = Math.max(asNumber(quantities[quantityKey]), minimumQuantity);
+    componentTotal += Math.max(quantity * unitWeight, settingValue(settings, `component_min_${component}`));
   }
 
-  const serviceFactor = services.reduce((total, service) => total + (SERVICE_FACTORS[service] || 0.35), 0);
+  // Component-specific options (§4/§6). Each answer maps to its own editable multiplier,
+  // and only applies when its component was actually selected.
+  const details = project.componentDetails || {};
+  let detailMultiplier = 1;
+
+  if (components.includes("doors")) {
+    detailMultiplier *= settingValue(settings, `door_type_${details.doorType || "standard"}_multiplier`) || 1;
+    detailMultiplier *= settingValue(settings, `door_material_${details.doorMaterial || "wood"}_multiplier`) || 1;
+    detailMultiplier *= settingValue(settings, `door_sides_${details.doorSides || "both_sides"}_multiplier`) || 1;
+    if (details.doorFrame === "yes") detailMultiplier *= settingValue(settings, "door_frame_multiplier") || 1;
+    detailMultiplier *= settingValue(settings, `door_condition_${details.doorCondition || "good"}_multiplier`) || 1;
+  }
+
+  if (components.includes("railings")) {
+    detailMultiplier *= settingValue(settings, `railing_type_${details.railingType || "balcony"}_multiplier`) || 1;
+    detailMultiplier *= settingValue(settings, `railing_material_${details.railingMaterial || "metal"}_multiplier`) || 1;
+    detailMultiplier *= settingValue(settings, `railing_condition_${details.railingCondition || "good"}_multiplier`) || 1;
+  }
+
+  const defaultServiceFactor = settingValue(settings, "service_factor_default");
+  const serviceFactor = services.reduce(
+    (total, service) => total + (settingValue(settings, `service_factor_${service}`) || defaultServiceFactor),
+    0
+  );
   const preparationFactor = services.some((service) => [
     "filling_spackling",
     "mold_treatment",
     "nicotine_treatment",
     "water_damage_repair",
     "priming_sealing"
-  ].includes(service)) ? 1.18 : 1;
-  const projectSizeFactor = componentTotal > 650000 ? 0.94 : componentTotal < 180000 ? 1.12 : 1;
+  ].includes(service)) ? settingValue(settings, "preparation_surcharge") : 1;
+  const projectSizeFactor = componentTotal > 650000
+    ? settingValue(settings, "large_project_discount")
+    : componentTotal < 180000
+      ? settingValue(settings, "small_project_surcharge")
+      : 1;
 
-  // Condition modifier (Section 13)
+  // Condition modifier (Section 13) — rates come from the admin-editable settings.
   const condition = options.condition || project.condition || "good";
-  let conditionFactor = 1.0;
-  if (condition === "minor_repairs") conditionFactor = 1.15;
-  else if (condition === "renovation") conditionFactor = 1.35;
+  const conditionKey = CONDITION_MODIFIER_KEYS[condition] || CONDITION_MODIFIER_KEYS.good;
+  const conditionFactor = settingValue(settings, conditionKey) || 1;
 
   // Travel cost calculation (Section 9)
   const postalCode = options.postalCode || project.postalCode || "";
-  const travelCostChf = postalCode ? calculateTravelCost(postalCode, options.settings) : 45;
+  const travelCostChf = postalCode
+    ? calculateTravelCost(postalCode, settings)
+    : Math.round(Number(settings.base_travel_flat_fee ?? DEFAULT_PRICING_SETTINGS.base_travel_flat_fee));
   const travelCostCents = travelCostChf * 100;
 
   const subtotal = componentTotal * clamp(0.82 + serviceFactor * 0.18, 0.9, 1.9);
-  const estimate = Math.max(65000, subtotal * propertyMultiplier * preparationFactor * projectSizeFactor * conditionFactor) + travelCostCents;
-  const min = Math.round((estimate * 0.92) / 1000) * 1000;
-  const max = Math.round((estimate * 1.12) / 1000) * 1000;
+  const estimate =
+    Math.max(
+      settingValue(settings, "detailed_minimum_cents"),
+      subtotal * propertyMultiplier * preparationFactor * projectSizeFactor * conditionFactor * detailMultiplier
+    ) + travelCostCents;
+
+  // Presented as a single figure per §12, rounded to the nearest CHF 10.
+  const total = Math.round(estimate / 1000) * 1000;
 
   return {
     currency: "CHF",
-    minCents: min,
-    maxCents: Math.max(max, min + 35000),
+    minCents: total,
+    maxCents: total,
     travelCostChf
+  };
+}
+
+/**
+ * Quick Quote pricing (spec §7A + §13).
+ *
+ * Customer A never supplies measurements, so the price is derived entirely from
+ * admin-editable reference values: a base price per property type, scaled by the scope
+ * of work and the surface condition, plus travel costs for the postcode. Every factor
+ * here is editable in the admin backend — none of it is hard-coded.
+ */
+export function calculateQuickQuotePrice(input = {}, settings = DEFAULT_PRICING_SETTINGS) {
+  const baseKey = QUICK_BASE_PRICE_KEYS[input.propertyType] || QUICK_BASE_PRICE_KEYS["3_5_apartment"];
+  const scopeKey = SCOPE_MODIFIER_KEYS[input.workScope] || SCOPE_MODIFIER_KEYS.walls_ceilings;
+  const conditionKey = CONDITION_MODIFIER_KEYS[input.condition] || CONDITION_MODIFIER_KEYS.good;
+
+  const basePriceChf = settingValue(settings, baseKey);
+  const scopeModifier = settingValue(settings, scopeKey);
+  const conditionModifier = settingValue(settings, conditionKey);
+  const travelCostChf = input.postalCode
+    ? calculateTravelCost(input.postalCode, settings)
+    : Math.round(settingValue(settings, "base_travel_flat_fee"));
+
+  const totalChf = Math.max(0, Math.round(basePriceChf * scopeModifier * conditionModifier + travelCostChf));
+  const cents = totalChf * 100;
+
+  return {
+    currency: "CHF",
+    // Presented as a single figure per §12, not a range.
+    minCents: cents,
+    maxCents: cents,
+    travelCostChf,
+    basePriceChf,
+    scopeModifier,
+    conditionModifier
   };
 }

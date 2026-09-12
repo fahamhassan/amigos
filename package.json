@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:push": "node scripts/apply-migrations.mjs"
+    "db:push": "node scripts/apply-migrations.mjs",
+    "check:calculator": "node scripts/check-calculator-catalog.mjs"
   },
   "dependencies": {
     "jspdf": "^4.2.1",

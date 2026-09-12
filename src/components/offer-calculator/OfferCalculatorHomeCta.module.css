@@ -173,3 +173,45 @@
     font-size: 15px;
   }
 }
+
+/* =======================================================================
+   DAY / NIGHT
+   The band previously forced a navy backdrop with !important, so in day mode
+   the themed (dark) calculator text landed on a dark ground. Both modes now
+   use the same photograph under a theme-appropriate wash.
+   ======================================================================= */
+
+:global(html[data-theme="amigos-light"] body[data-page="home"]) .section,
+:global(html[data-theme="amigos-light"] body[data-page="home"] .home-calculator-cta) {
+  background-color: #f7f1e7 !important;
+  background-image:
+    linear-gradient(180deg, rgba(250, 247, 240, .94) 0%, rgba(250, 247, 240, .88) 45%, rgba(247, 241, 231, .93) 100%),
+    url("/assets/calculator-glass-bg.png") !important;
+  background-size: cover, cover !important;
+  background-position: center, center bottom !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Day mode needs the night photograph lifted so it reads as a soft texture. */
+:global(html[data-theme="amigos-light"]) .section::before {
+  background:
+    radial-gradient(circle at 50% 25%, rgba(255, 255, 255, .5), transparent 62%);
+}
+
+:global(html[data-theme="amigos-light"]) .section {
+  color: #10233c;
+}
+
+/* Day mode uses the daytime photograph of the same house; the previous cream wash over
+   the night shot had flattened the scene to an empty field. */
+:global(html[data-theme="amigos-light"] body[data-page="home"]) .section,
+:global(html[data-theme="amigos-light"] body[data-page="home"] .home-calculator-cta) {
+  background-color: #eef2f6 !important;
+  background-image:
+    linear-gradient(180deg, rgba(250, 247, 240, .60) 0%, rgba(250, 247, 240, .42) 42%, rgba(247, 241, 231, .66) 100%),
+    url("/assets/calculator-day-bg.webp") !important;
+}
+
+:global(html[data-theme="amigos-light"]) .section::before {
+  background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, .28), transparent 62%);
+}

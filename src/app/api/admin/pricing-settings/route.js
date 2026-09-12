@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { DEFAULT_PRICING_SETTINGS } from "@/lib/offerCalculator/pricingSettings";
+import { ADMIN_SESSION_COOKIE, verifyAdminSession } from "@/lib/session";
 
-export async function GET() {
+export const runtime = "nodejs";
+
+async function requireAdmin(request) {
+  const session = await verifyAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+  return session ? null : NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+}
+
+export async function GET(request) {
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
+
   try {
     const rows = await sql`
       select key, value, description, category, updated_at as "updatedAt"
@@ -18,6 +29,9 @@ export async function GET() {
 }
 
 export async function PUT(request) {
+  const denied = await requireAdmin(request);
+  if (denied) return denied;
+
   try {
     const body = await request.json();
     const { updates } = body; // array of { key, value }
