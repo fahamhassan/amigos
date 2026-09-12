@@ -1,0 +1,40 @@
+# Vercel's CLI uses this file, not .gitignore. Without it the 4.5 GB Python
+# backend below gets uploaded with every deploy.
+
+# Local-only Python vision backend — deployed separately, 4.5 GB.
+backend/
+
+# Build output and dependencies — Vercel regenerates both.
+.next/
+out/
+node_modules/
+
+# Leftover file-based store from an earlier implementation. Nothing in src/
+# references it; persistence goes through Postgres (src/lib/db.js).
+.data/
+
+# Nothing imports @prisma/client and prisma is not in package.json —
+# the data layer is postgres.js.
+prisma/
+
+# Local dev only.
+docker-compose.yml
+
+# Secrets. Environment variables are set in the Vercel project, never uploaded.
+.env
+.env.local
+.env*.local
+
+# Archive cruft and OS files.
+__MACOSX/
+.DS_Store
+**/.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python artifacts, in case anything lands outside backend/.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
